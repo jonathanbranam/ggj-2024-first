@@ -11,14 +11,12 @@ import { DefaultLoadingScreen } from '@babylonjs/core/Loading/loadingScreen';
 import "@babylonjs/loaders/glTF"; 
 import "@babylonjs/loaders/OBJ"; 
 
-// const ASSETS = "/Volumes/Data/work/ggj24/assets";
-const ASSETS = "assets";
-const ASSETS_BUILDER = `${ASSETS}/KayKit_City_Builder_Bits_1.0_FREE/Assets/gltf/`;
-const ASSETS_MECHA = `${ASSETS}/MechGolem/`;
+import { ASSETS_BUILDER, ASSETS_MECHA } from './constants';
 
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
 
-export function createLoadingMeshScene(engine, canvas) {
+// canvas is an HTMLElement...
+export function createLoadingMeshScene(engine: Engine, canvas) {
 
   // Create our first scene.
   var scene = new Scene(engine);
