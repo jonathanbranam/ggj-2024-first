@@ -1,5 +1,6 @@
 // import { Scene } from '@babylonjs/core/scene';
 var BABYLON = require("@babylonjs/core");
+// var Assets = require("@babylonjs/assets");
 
 var createScene = function (engine, canvas) {
   // This creates a basic Babylon Scene object (non-mesh)
@@ -31,11 +32,14 @@ var createScene = function (engine, canvas) {
 
   const groundMat = new BABYLON.StandardMaterial("Ground Mat", scene);
   groundMat.diffuseColor = BABYLON.Color3.Red();
-  ground.material = groundMat;
+  // let groundTex = new BABYLON.Texture(Assets.textures.checkerboard_basecolor_png.rootUrl, scene);
+  // groundMat.diffuseTexture = groundTex;
+  // ground.material = groundMat;
+
 
   return scene;
 };
 
 module.exports = {
-  createScene,
+  createFirstStepScene: createScene,
 }
