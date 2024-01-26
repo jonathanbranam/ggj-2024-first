@@ -13,7 +13,11 @@
   "dependencies": {
     "@babylonjs/core": "^6.38.1",
     "@babylonjs/gui": "^6.38.1",
+    "@babylonjs/inspector": "^6.40.0",
     "@babylonjs/loaders": "^6.38.1",
-    "@babylonjs/materials": "^6.38.1"
+    "@babylonjs/materials": "^6.38.1",
+    "@babylonjs/post-processes": "^6.40.0",
+    "@babylonjs/procedural-textures": "^6.40.0",
+    "@babylonjs/serializers": "^6.40.0"
   }
 }
