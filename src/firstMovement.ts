@@ -11,6 +11,36 @@ import { GameInput } from './input/GameInput';
 import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
+export class FirstMovement {
+  private _scene: Scene;
+
+  constructor() {
+  }
+
+  createScene = (engine: Engine, canvas) => {
+    // Create our first scene.
+    const scene = new Scene(engine);
+
+    const camera = createCamera(scene, canvas);
+
+    const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
+
+    const input = new GameInput(scene);
+    input.addAction('forward', {
+      type: 'held',
+      callback: () => {
+        console.log(`Forward held`);
+      },
+    });
+
+    createWorld(scene);
+
+    loadCharacterA(scene, new Vector3(3, 1, 2));
+
+    return scene;
+  }
+}
+
 function createCamera(scene: Scene, canvas): Camera {
   // This creates and positions a free camera (non-mesh)
   var camera = new FreeCamera("camera1", new Vector3(0, 5, 10), scene);
@@ -24,27 +54,6 @@ function createCamera(scene: Scene, canvas): Camera {
   return camera;
 }
 
-function redGround(scene: Scene): Mesh {
-  // Our built-in 'ground' shape.
-  var ground = MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
-
-  const groundMat = new StandardMaterial("Ground Mat", scene);
-  groundMat.diffuseColor = Color3.Red();
-  ground.material = groundMat;
-
-  return ground;
-}
-
-function createSphere(scene: Scene): Mesh {
-  // Our built-in 'sphere' shape.
-  var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
-
-  // Move the sphere upward 1/2 its height
-  sphere.position.y = 1;
-
-  return sphere;
-}
-
 function createWorld(scene: Scene) {
   // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
   var light = new HemisphericLight("light", new Vector3(1, 2, 0), scene);
@@ -52,29 +61,14 @@ function createWorld(scene: Scene) {
   // Default intensity is 1. Let's dim the light a small amount
   light.intensity = 0.7;
 
-  createSphere(scene);
-
   const g1 = createGround(scene);
-  const spikeFloor = loadSpikeFloor(scene, new Vector3(3, 1, 0));
 
   return scene;
 }
 
 export function createFirstMovementScene(engine: Engine, canvas) {
-  // Create our first scene.
-  const scene = new Scene(engine);
-
-  const camera = createCamera(scene, canvas);
-
-  const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
-
-  const input = new GameInput(scene);
-
-  createWorld(scene);
-
-  loadCharacterA(scene, new Vector3(3, 1, 2));
-
-  return scene;
+  const clz = new FirstMovement();
+  return clz.createScene(engine, canvas);
 }
 
 

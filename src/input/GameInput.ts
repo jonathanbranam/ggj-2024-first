@@ -5,7 +5,14 @@ import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@
 
 type ActionName = string;
 type ActionType = 'pressed' | 'held' | 'released';
-type ActionDefinition = ActionType;
+// type ActionDefinition = ActionType;
+
+type ActionCallback = (action: ActionName, keyState: KeyState, event?: ActionEvent) => void;
+type ActionDefinition = {
+  type: ActionType;
+  callback: ActionCallback;
+};
+
 type Action = {
   name: ActionName,
   type: ActionType,
@@ -15,11 +22,11 @@ type ActionKeysMap = Record<ActionName, string[]>;
 type ActionDefinitions = Record<ActionName, ActionDefinition>;
 
 const ACTION_DEFS: Record<ActionName, ActionDefinition> = {
-  'forward': 'held',
-  'back': 'held',
-  'left': 'held',
-  'right': 'held',
-  'inspector': 'pressed',
+  // 'forward': 'held',
+  // 'back': 'held',
+  // 'left': 'held',
+  // 'right': 'held',
+  // 'inspector': 'pressed',
 }
 
 // Event properties
@@ -78,6 +85,10 @@ export class GameInput {
 
   }
 
+  addAction = (action: string, def: ActionDefinition) => {
+    this._actionDefs[action] = def;
+  }
+
   constructor(scene: Scene, keyMap: KeyActionsMap = WASD_KEY_MAP) {
     this._scene = scene;
     this._scene.actionManager = new ActionManager(this._scene);
@@ -114,6 +125,22 @@ export class GameInput {
     this._scene.onBeforeRenderObservable.add(() => {
       this._updateFromInput();
     });
+
+    this.addAction('inspector', {
+      type: 'pressed',
+      callback: () => {
+        console.log("Inspector pressed");
+        if (this._inspectorVisible) {
+          console.log(`Hide inspector`);
+          Inspector.Hide();
+          this._inspectorVisible = false;
+        } else {
+          console.log(`Show inspector`);
+          Inspector.Show(this._scene, {});
+          this._inspectorVisible = true;
+        }
+      },
+    });
   }
 
   private _updateFromInput = () => {
@@ -134,15 +161,16 @@ export class GameInput {
     }
 
     if (action === 'inspector') {
-      if (this._inspectorVisible) {
-        console.log(`Hide inspector`);
-        Inspector.Hide();
-        this._inspectorVisible = false;
-      } else {
-        console.log(`Show inspector`);
-        Inspector.Show(this._scene, {});
-        this._inspectorVisible = true;
-      }
+      console.log("Old inspector pressed");
+      // if (this._inspectorVisible) {
+      //   console.log(`Hide inspector`);
+      //   Inspector.Hide();
+      //   this._inspectorVisible = false;
+      // } else {
+      //   console.log(`Show inspector`);
+      //   Inspector.Show(this._scene, {});
+      //   this._inspectorVisible = true;
+      // }
     }
   }
 
@@ -165,7 +193,7 @@ export class GameInput {
       if (key in this._keyToActions) {
         for (const actionName of this._keyToActions[key]) {
           const actionDef = this._actionDefs[actionName];
-          if (held && actionDef === 'held') {
+          if (actionDef && held && actionDef.type === 'held') {
             callback(actionName, held, event);
           }
         }
@@ -183,11 +211,15 @@ export class GameInput {
     if (key in this._keyToActions) {
       for (const actionName of this._keyToActions[key]) {
         const actionDef = this._actionDefs[actionName];
-        if (actionDef === 'pressed' && event) {
+        if (actionDef && actionDef.type === 'pressed' && event) {
           if (event.sourceEvent.type === 'keydown' && !event.sourceEvent.repeat) {
+            if (actionDef.callback) {
+              actionDef.callback(actionName, true, event);
+            }
             callback(actionName, true, event);
           }
         }
+
       }
     }
   }
