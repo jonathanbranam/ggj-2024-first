@@ -1,13 +1,7 @@
-import { Engine } from '@babylonjs/core/Engines/engine';
-import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
-import { AdvancedDynamicTexture } from '@babylonjs/gui';
-// import { ActionManager } from '@babylonjs/core/Actions/actionManager';
-import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
 import { Inspector } from '@babylonjs/inspector';
-
-import { GameInput } from './input/GameInput';
+import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
 
 type ActionName = string;
 type ActionType = 'pressed' | 'held' | 'released';
@@ -37,51 +31,6 @@ const ACTION_DEFS: Record<ActionName, ActionDefinition> = {
 // key: string
 // keyCode: number
 
-function callForAction(
-  actionType: ActionType,
-  inputState: InputState,
-  keyToActions: KeyActionsMap,
-  actionDefs: ActionDefinitions,
-  callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
-  event?: ActionEvent)
-  {
-  // for each key in the down state if it maps to an action call the action
-  // held down handler
-  for (const [key, held] of Object.entries(inputState)) {
-    if (key in keyToActions) {
-      for (const actionName of keyToActions[key]) {
-        const actionDef = ACTION_DEFS[actionName];
-        if (held && actionDef === 'held') {
-          callback(actionName, held, event);
-        }
-      }
-    }
-  }
-}
-
-function callActionForEvent(
-  actionType: ActionType,
-  key: string,
-  inputState: InputState,
-  keyToActions: KeyActionsMap,
-  actionDefs: ActionDefinitions,
-  callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
-  event: ActionEvent)
-  {
-  // for each key in the down state if it maps to an action call the action
-  // held down handler
-  if (key in keyToActions) {
-    for (const actionName of keyToActions[key]) {
-      const actionDef = ACTION_DEFS[actionName];
-      if (actionDef === 'pressed' && event) {
-        if (event.sourceEvent.type === 'keydown' && !event.sourceEvent.repeat) {
-          callback(actionName, true, event);
-        }
-      }
-    }
-  }
-}
-
 const WASD_KEY_MAP: KeyActionsMap = {
   'w': ['forward'],
   'a': ['left'],
@@ -97,11 +46,12 @@ const WASD_KEY_MAP: KeyActionsMap = {
 type KeyState = boolean;
 type InputState = Record<string, KeyState>;
 
-class InputTest {
+export class GameInput {
   private _scene;
   public inputState: InputState = {};
   private _keyToActions: KeyActionsMap;
   private _actionToKeys: ActionKeysMap;
+  private _actionDefs: ActionDefinitions = ACTION_DEFS;
   public logKeyPresses: boolean = false;
   public logActions: boolean = false;
 
@@ -144,7 +94,7 @@ class InputTest {
         }
         this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         if (e.sourceEvent.type == "keydown") {
-          callActionForEvent('pressed', e.sourceEvent.key, this.inputState, this._keyToActions, ACTION_DEFS, this.actionDown, e);
+          this._callActionForEvent('pressed', e.sourceEvent.key, this._actionDown, e);
         }
       }
     ));
@@ -156,29 +106,29 @@ class InputTest {
         }
         this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         // if (e.sourceEvent.type == "keyup") {
-        callActionForEvent('released', e.sourceEvent.key, this.inputState, this._keyToActions, ACTION_DEFS, this.actionUp, e);
+        this._callActionForEvent('released', e.sourceEvent.key, this._actionUp, e);
         // }
       }
     ));
 
     this._scene.onBeforeRenderObservable.add(() => {
-      this.updateFromInput();
+      this._updateFromInput();
     });
   }
 
-  updateFromInput = () => {
+  private _updateFromInput = () => {
 
-    callForAction('held', this.inputState, this._keyToActions, ACTION_DEFS, this.actionHeldDown);
+    this._callForAction('held', this._actionHeldDown);
 
   }
 
-  actionUp = (action: string, keyState: KeyState, event?: ActionEvent) => {
+  private _actionUp = (action: string, keyState: KeyState, event?: ActionEvent) => {
     if (this.logActions) {
       console.log(`Action released: ${action}`, event);
     }
   }
 
-  actionDown = (action: string, keyState: KeyState) => {
+  private _actionDown = (action: string, keyState: KeyState) => {
     if (this.logActions) {
       console.log(`Action pressed: ${action}`, event);
     }
@@ -196,36 +146,51 @@ class InputTest {
     }
   }
 
-  actionHeldDown = (action: string) => {
+  private _actionHeldDown = (action: string) => {
     if (this.logActions) {
       console.log(`Action held: ${action}`);
     }
     if (action === 'forward') {
-      // console.log(`Move forward`);
+      console.log(`Move forward`);
     }
   }
-}
 
-export function createInputTestScene(engine: Engine, canvas) {
-  // Create our first scene.
-  const scene = new Scene(engine);
+  private _callForAction = (
+    actionType: ActionType,
+    callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
+    event?: ActionEvent) => {
+    // for each key in the down state if it maps to an action call the action
+    // held down handler
+    for (const [key, held] of Object.entries(this.inputState)) {
+      if (key in this._keyToActions) {
+        for (const actionName of this._keyToActions[key]) {
+          const actionDef = this._actionDefs[actionName];
+          if (held && actionDef === 'held') {
+            callback(actionName, held, event);
+          }
+        }
+      }
+    }
+  }
 
-  const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
+  private _callActionForEvent = (
+    actionType: ActionType,
+    key: string,
+    callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
+    event: ActionEvent) => {
+    // for each key in the down state if it maps to an action call the action
+    // held down handler
+    if (key in this._keyToActions) {
+      for (const actionName of this._keyToActions[key]) {
+        const actionDef = this._actionDefs[actionName];
+        if (actionDef === 'pressed' && event) {
+          if (event.sourceEvent.type === 'keydown' && !event.sourceEvent.repeat) {
+            callback(actionName, true, event);
+          }
+        }
+      }
+    }
+  }
 
-  // This creates and positions a free camera (non-mesh)
-  var camera = new FreeCamera("camera1", new Vector3(0, 5, 10), scene);
-
-  // This targets the camera to scene origin
-  camera.setTarget(Vector3.Zero());
-
-  // This attaches the camera to the canvas
-  camera.attachControl(canvas, true);
-
-  // const input = new InputTest(scene);
-  const input = new GameInput(scene);
-
-
-
-  return scene;
 }
 
