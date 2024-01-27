@@ -4,10 +4,11 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 import { HemisphericLight, Camera, ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
-import { MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
+import { Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
 import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
+import { createGround } from './world/World';
 
 function createCamera(scene: Scene, canvas): Camera {
   // This creates and positions a free camera (non-mesh)
@@ -20,6 +21,17 @@ function createCamera(scene: Scene, canvas): Camera {
   camera.attachControl(canvas, true);
 
   return camera;
+}
+
+function redGround(scene: Scene): Mesh {
+  // Our built-in 'ground' shape.
+  var ground = MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+
+  const groundMat = new StandardMaterial("Ground Mat", scene);
+  groundMat.diffuseColor = Color3.Red();
+  ground.material = groundMat;
+
+  return ground;
 }
 
 function createWorld(scene: Scene) {
@@ -35,12 +47,7 @@ function createWorld(scene: Scene) {
   // Move the sphere upward 1/2 its height
   sphere.position.y = 1;
 
-  // Our built-in 'ground' shape.
-  var ground = MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
-
-  const groundMat = new StandardMaterial("Ground Mat", scene);
-  groundMat.diffuseColor = Color3.Red();
-  ground.material = groundMat;
+  const g1 = createGround(scene);
 
   return scene;
 }
