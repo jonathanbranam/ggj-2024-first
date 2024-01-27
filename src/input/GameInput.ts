@@ -105,9 +105,9 @@ export class GameInput {
           console.log(`Key ${e.sourceEvent.key}: ${e.sourceEvent.type}`, e);
         }
         this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
-        // if (e.sourceEvent.type == "keyup") {
-        this._callActionForEvent('released', e.sourceEvent.key, this._actionUp, e);
-        // }
+        if (e.sourceEvent.type == "keyup") {
+          this._callActionForEvent('released', e.sourceEvent.key, this._actionUp, e);
+        }
       }
     ));
 
