@@ -5,7 +5,6 @@ import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@
 
 type ActionName = string;
 type ActionType = 'pressed' | 'held' | 'released';
-// type ActionDefinition = ActionType;
 
 type ActionCallback = (
   action: ActionName,
@@ -25,14 +24,6 @@ type Action = {
 type KeyActionsMap = Record<string, ActionName[]>;
 type ActionKeysMap = Record<ActionName, string[]>;
 type ActionDefinitions = Record<ActionName, ActionDefinition>;
-
-const ACTION_DEFS: Record<ActionName, ActionDefinition> = {
-  // 'forward': 'held',
-  // 'back': 'held',
-  // 'left': 'held',
-  // 'right': 'held',
-  // 'inspector': 'pressed',
-}
 
 // Event properties
 // altKey
@@ -63,7 +54,7 @@ export class GameInput {
   public inputState: InputState = {};
   private _keyToActions: KeyActionsMap;
   private _actionToKeys: ActionKeysMap;
-  private _actionDefs: ActionDefinitions = ACTION_DEFS;
+  private _actionDefs: ActionDefinitions = {};
   public logKeyPresses: boolean = false;
   public logActions: boolean = false;
 

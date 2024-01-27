@@ -17,7 +17,7 @@ export class FirstMovement {
   constructor() {
   }
 
-  createScene = (engine: Engine, canvas) => {
+  createScene = async (engine: Engine, canvas) => {
     // Create our first scene.
     const scene = new Scene(engine);
 
@@ -29,7 +29,15 @@ export class FirstMovement {
     input.addAction('forward', {
       type: 'held',
       callback: (action, deltaTime) => {
-        camera.position.z -= 10 * deltaTime;
+        const speed = 10 * deltaTime;
+        const forward = camera.getForwardRay(speed);
+        // camera.position.z -= 10 * deltaTime;
+        // camera.position.add(forward);
+        const moveVec = new Vector3(0, 0, speed);
+        // camera.absoluteRotation;
+        moveVec.applyRotationQuaternionInPlace(camera.absoluteRotation);
+        console.log(`Camera forward`, moveVec);
+        camera.position.addInPlace(moveVec);
       },
     });
     input.addAction('back', {
@@ -53,7 +61,7 @@ export class FirstMovement {
 
     createWorld(scene);
 
-    loadCharacterA(scene, new Vector3(3, 1, 2));
+    const pc = await loadCharacterA(scene, new Vector3(3, 1, 2));
 
     return scene;
   }
@@ -84,7 +92,7 @@ function createWorld(scene: Scene) {
   return scene;
 }
 
-export function createFirstMovementScene(engine: Engine, canvas) {
+export async function createFirstMovementScene(engine: Engine, canvas) {
   const clz = new FirstMovement();
   return clz.createScene(engine, canvas);
 }

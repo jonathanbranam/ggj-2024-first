@@ -40,9 +40,13 @@ const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 const engine = new Engine(canvas);
 engine.loadingScreen = new DefaultLoadingScreen(canvas);
 
-const selectedScene = SCENES[0].createScene(engine, canvas);
+async function loadScene(): Promise<Scene> {
+  return SCENES[0].createScene(engine, canvas);
+}
 
-// Render every frame
-engine.runRenderLoop(() => {
-  selectedScene.render();
+loadScene().then((scene) => {
+  // Render every frame
+  engine.runRenderLoop(() => {
+    scene.render();
+  });
 });
