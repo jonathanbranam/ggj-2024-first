@@ -25,43 +25,55 @@ export class FirstMovement {
 
     const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
 
+    const [pc] = await loadCharacterA(scene, new Vector3(3, 1, 2));
+
+    function movePlayer(deltaTime, x, z) {
+      const moveVec = pc.calcRotatePOV(x * deltaTime, 0, z * deltaTime);
+      pc.position.addInPlace(moveVec);
+      camera.position.addInPlace(moveVec);
+    }
+
     const input = new GameInput(scene);
     input.addAction('forward', {
       type: 'held',
       callback: (action, deltaTime) => {
-        const speed = 10 * deltaTime;
-        const forward = camera.getForwardRay(speed);
-        // camera.position.z -= 10 * deltaTime;
-        // camera.position.add(forward);
-        const moveVec = new Vector3(0, 0, speed);
-        // camera.absoluteRotation;
-        moveVec.applyRotationQuaternionInPlace(camera.absoluteRotation);
-        console.log(`Camera forward`, moveVec);
-        camera.position.addInPlace(moveVec);
+        // const speed = 10 * deltaTime;
+        // const forward = camera.getForwardRay(speed);
+        // // camera.position.z -= 10 * deltaTime;
+        // // camera.position.add(forward);
+        // const moveVec = new Vector3(0, 0, speed);
+        // // camera.absoluteRotation;
+        // moveVec.applyRotationQuaternionInPlace(camera.absoluteRotation);
+        // console.log(`Camera forward`, moveVec);
+        // camera.position.addInPlace(moveVec);
+        movePlayer(deltaTime, 0, 10);
       },
     });
     input.addAction('back', {
       type: 'held',
       callback: (action, deltaTime) => {
-        camera.position.z += 10 * deltaTime;
+        // camera.position.z += 10 * deltaTime;
+        // console.log(`PC`, pc);
+        // pc.position.z += 10 * deltaTime;
+        movePlayer(deltaTime, 0, -10);
       },
     });
     input.addAction('left', {
       type: 'held',
       callback: (action, deltaTime) => {
-        camera.position.x += 10 * deltaTime;
+        // camera.position.x += 10 * deltaTime;
+        movePlayer(deltaTime, 10, 0);
       },
     });
     input.addAction('right', {
       type: 'held',
       callback: (action, deltaTime) => {
-        camera.position.x -= 10 * deltaTime;
+        // camera.position.x -= 10 * deltaTime;
+        movePlayer(deltaTime, -10, 0);
       },
     });
 
     createWorld(scene);
-
-    const pc = await loadCharacterA(scene, new Vector3(3, 1, 2));
 
     return scene;
   }

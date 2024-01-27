@@ -44,7 +44,7 @@ export function createGround(scene: Scene): GroundMesh {
 
   _.range(groundLength).forEach((i) => {
     _.range(groundWidth).forEach((j) => {
-      console.log(`Floor ${i}, ${j}`);
+      // console.log(`Floor ${i}, ${j}`);
       var ground = CreateGround('', { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
       ground.position.x = FLOOR_TILE_SIZE.x*(groundWidth/2) - j*4;
       ground.position.z = -i*4;
