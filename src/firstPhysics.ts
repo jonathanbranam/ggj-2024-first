@@ -11,8 +11,13 @@ import { GameInput } from './input/GameInput';
 import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
+import HavokPhysics from '@babylonjs/havok';
+import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+
 export class FirstPhysics {
   private _scene: Scene;
+  private _havok;
+  private _havokPlugin;
 
   constructor() {
   }
@@ -65,6 +70,23 @@ export class FirstPhysics {
 
     createWorld(scene);
 
+    const groundMeshes = createGround(scene);
+
+    this._havok = await HavokPhysics();
+    this._havokPlugin = new HavokPlugin(true, this._havok);
+    scene.enablePhysics(new Vector3(0, -9.8, 0), this._havokPlugin);
+
+    // const pcPhysics = new PhysicsAggregate(pc, PhysicsShapeType.SPHERE,{
+    //   mass: 1, restitution: 0.75,
+    // }, scene);
+
+    for (const gm of groundMeshes) {
+      const groundPhysics = new PhysicsAggregate(gm, PhysicsShapeType.BOX,{
+        mass: 0,
+      }, scene);
+    }
+
+
     return scene;
   }
 }
@@ -88,8 +110,6 @@ function createWorld(scene: Scene) {
 
   // Default intensity is 1. Let's dim the light a small amount
   light.intensity = 0.7;
-
-  const g1 = createGround(scene);
 
   return scene;
 }

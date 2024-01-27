@@ -30,14 +30,15 @@ export function createGroundOld(scene: Scene): GroundMesh {
   return ground;
 }
 
-export function createGround(scene: Scene): GroundMesh {
+export function createGround(scene: Scene): GroundMesh[] {
   // Create a grid material
   var material = new GridMaterial("grid", scene);
   // material.gridRatio = 0.25;
 
   // Our built-in 'ground' shape.
-  var ground = CreateGround('', { width: 4, height: 4, subdivisions: 1 }, scene);
-  ground.material = material;
+  // var ground = CreateGround('', { width: 4, height: 4, subdivisions: 1 }, scene);
+  // ground.material = material;
+  const groundMeshes = [];
 
   const groundWidth = 4;
   const groundLength = 12;
@@ -45,15 +46,15 @@ export function createGround(scene: Scene): GroundMesh {
   _.range(groundLength).forEach((i) => {
     _.range(groundWidth).forEach((j) => {
       // console.log(`Floor ${i}, ${j}`);
-      var ground = CreateGround('', { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
+      const ground = CreateGround('', { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
       ground.position.x = FLOOR_TILE_SIZE.x*(groundWidth/2) - j*4;
       ground.position.z = -i*4;
       ground.material = material;
+      groundMeshes.push(ground);
     });
   });
 
-
-  return ground;
+  return groundMeshes;
 }
 
 export async function loadBuildingB(scene: Scene, position?: Vector3): Promise<LoadedMesh> {
