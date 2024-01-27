@@ -32,7 +32,7 @@ type LoadedMesh = [AbstractMesh, AbstractMesh[]];
  */
 export function loadGltkMesh(path: string, filename: string, scene: Scene, position?: Vector3): Promise<LoadedMesh> {
   return new Promise((resolve) => {
-    SceneLoader.ImportMesh("", ASSETS_WORLD, SPIKE_FLOOR, scene, (meshes: AbstractMesh[]) => {
+    SceneLoader.ImportMesh("", path, filename, scene, (meshes: AbstractMesh[]) => {
       console.log("Mesh imported", meshes);
       for (const m of meshes) {
         if (m.name === "__root__") {
@@ -49,20 +49,8 @@ export function loadGltkMesh(path: string, filename: string, scene: Scene, posit
   });
 }
 
-export async function loadBuildingB(scene: Scene): Promise<AbstractMesh[]> {
-  return new Promise((resolve) => {
-    SceneLoader.ImportMesh("", ASSETS_BUILDER, 'building_B.gltf', scene, (meshes: AbstractMesh[]) => {
-      console.log("Mesh imported", meshes);
-      for (const m of meshes) {
-        if (m.name === "__root__") {
-          // m.addRotation(0, Math.PI, 0);
-          m.position = new Vector3(1, 0, 0);
-        }
-        console.log(`Imported mesh ${m.name} at ${m.position}, ${m.rotation}.`);
-      }
-      return resolve(meshes);
-    });
-  });
+export async function loadBuildingB(scene: Scene, position?: Vector3): Promise<LoadedMesh> {
+  return loadGltkMesh(ASSETS_BUILDER,  'building_B.gltf', scene, position);
 }
 
 export async function loadSpikeFloor(scene: Scene, position?: Vector3): Promise<LoadedMesh> {
