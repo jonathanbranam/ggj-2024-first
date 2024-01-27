@@ -8,7 +8,7 @@ import { Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
 import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
-import { createGround } from './world/World';
+import { createGround, loadSpikeFloor } from './world/World';
 
 function createCamera(scene: Scene, canvas): Camera {
   // This creates and positions a free camera (non-mesh)
@@ -34,20 +34,27 @@ function redGround(scene: Scene): Mesh {
   return ground;
 }
 
-function createWorld(scene: Scene) {
-  // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-  var light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-
-  // Default intensity is 1. Let's dim the light a small amount
-  light.intensity = 0.7;
-
+function createSphere(scene: Scene): Mesh {
   // Our built-in 'sphere' shape.
   var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
 
   // Move the sphere upward 1/2 its height
   sphere.position.y = 1;
 
+  return sphere;
+}
+
+function createWorld(scene: Scene) {
+  // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+  var light = new HemisphericLight("light", new Vector3(1, 2, 0), scene);
+
+  // Default intensity is 1. Let's dim the light a small amount
+  light.intensity = 0.7;
+
+  createSphere(scene);
+
   const g1 = createGround(scene);
+  const spikeFloor = loadSpikeFloor(scene);
 
   return scene;
 }
