@@ -9,6 +9,7 @@ import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
 import { createGround, loadSpikeFloor, loadBuildingB } from './world/World';
+import { loadCharacterA } from './character/PlayerMesh';
 
 function createCamera(scene: Scene, canvas): Camera {
   // This creates and positions a free camera (non-mesh)
@@ -71,6 +72,8 @@ export function createFirstWorldScene(engine: Engine, canvas) {
   const input = new GameInput(scene);
 
   createWorld(scene);
+
+  loadCharacterA(scene, new Vector3(3, 1, 2));
 
   return scene;
 }
