@@ -7,7 +7,12 @@ type ActionName = string;
 type ActionType = 'pressed' | 'held' | 'released';
 // type ActionDefinition = ActionType;
 
-type ActionCallback = (action: ActionName, keyState: KeyState, event?: ActionEvent) => void;
+type ActionCallback = (
+  action: ActionName,
+  deltaTime: number,
+  keyState: KeyState,
+  event?: ActionEvent,
+) => void;
 type ActionDefinition = {
   type: ActionType;
   callback: ActionCallback;
@@ -148,42 +153,13 @@ export class GameInput {
 
   }
 
-  private _actionUp = (action: string, keyState: KeyState, event?: ActionEvent) => {
-    if (this.logActions) {
-      console.log(`Action released: ${action}`, event);
-    }
-  }
-
-  private _actionDown = (action: string, keyState: KeyState) => {
-    if (this.logActions) {
-      console.log(`Action pressed: ${action}`, event);
-    }
-
-    if (action === 'inspector') {
-      console.log("Old inspector pressed");
-      // if (this._inspectorVisible) {
-      //   console.log(`Hide inspector`);
-      //   Inspector.Hide();
-      //   this._inspectorVisible = false;
-      // } else {
-      //   console.log(`Show inspector`);
-      //   Inspector.Show(this._scene, {});
-      //   this._inspectorVisible = true;
-      // }
-    }
-  }
-
-  private _actionHeldDown = (action: string) => {
-    if (action === 'forward') {
-      // console.log(`Move forward`);
-    }
-  }
-
   private _callForAction = (
     actionType: ActionType,
     event?: ActionEvent) => {
     // for each key in the down state if it maps to an action call the action
     // held down handler
+    const deltaTime = this._scene.getEngine().getDeltaTime() / 1000.0;
+
     for (const [key, held] of Object.entries(this.inputState)) {
       if (key in this._keyToActions) {
         for (const actionName of this._keyToActions[key]) {
@@ -193,7 +169,7 @@ export class GameInput {
               console.log(`Action held: ${actionName}`);
             }
             if (actionDef.callback) {
-              actionDef.callback(actionName, held, event);
+              actionDef.callback(actionName, deltaTime, held, event);
             }
           }
         }
@@ -207,6 +183,8 @@ export class GameInput {
     event: ActionEvent) => {
     // for each key in the down state if it maps to an action call the action
     // held down handler
+    const deltaTime = this._scene.getEngine().getDeltaTime() / 1000.0;
+
     if (key in this._keyToActions) {
       for (const actionName of this._keyToActions[key]) {
         const actionDef = this._actionDefs[actionName];
@@ -216,7 +194,7 @@ export class GameInput {
               console.log(`Action pressed: ${actionName}`, event);
             }
             if (actionDef.callback) {
-              actionDef.callback(actionName, true, event);
+              actionDef.callback(actionName, deltaTime, true, event);
             }
           }
         }

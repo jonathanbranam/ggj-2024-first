@@ -28,9 +28,26 @@ export class FirstMovement {
     const input = new GameInput(scene);
     input.addAction('forward', {
       type: 'held',
-      callback: () => {
-        // console.log(`Forward held`);
-        camera.position.z -= 0.1;
+      callback: (action, deltaTime) => {
+        camera.position.z -= 10 * deltaTime;
+      },
+    });
+    input.addAction('back', {
+      type: 'held',
+      callback: (action, deltaTime) => {
+        camera.position.z += 10 * deltaTime;
+      },
+    });
+    input.addAction('left', {
+      type: 'held',
+      callback: (action, deltaTime) => {
+        camera.position.x += 10 * deltaTime;
+      },
+    });
+    input.addAction('right', {
+      type: 'held',
+      callback: (action, deltaTime) => {
+        camera.position.x -= 10 * deltaTime;
       },
     });
 
