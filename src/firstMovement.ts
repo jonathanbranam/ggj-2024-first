@@ -27,8 +27,9 @@ export class FirstMovement {
 
     const [pc] = await loadCharacterA(scene, new Vector3(3, 1, 2));
 
-    function movePlayer(deltaTime, x, z) {
-      const moveVec = pc.calcRotatePOV(x * deltaTime, 0, z * deltaTime);
+    function movePlayer(deltaTime, amountForward, amountRight) {
+      // character mesh faces positive X which is not "forwards" for BabylonJS
+      const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
       pc.position.addInPlace(moveVec);
       camera.position.addInPlace(moveVec);
     }
@@ -37,39 +38,25 @@ export class FirstMovement {
     input.addAction('forward', {
       type: 'held',
       callback: (action, deltaTime) => {
-        // const speed = 10 * deltaTime;
-        // const forward = camera.getForwardRay(speed);
-        // // camera.position.z -= 10 * deltaTime;
-        // // camera.position.add(forward);
-        // const moveVec = new Vector3(0, 0, speed);
-        // // camera.absoluteRotation;
-        // moveVec.applyRotationQuaternionInPlace(camera.absoluteRotation);
-        // console.log(`Camera forward`, moveVec);
-        // camera.position.addInPlace(moveVec);
-        movePlayer(deltaTime, 0, 10);
+        movePlayer(deltaTime, 10, 0);
       },
     });
     input.addAction('back', {
       type: 'held',
       callback: (action, deltaTime) => {
-        // camera.position.z += 10 * deltaTime;
-        // console.log(`PC`, pc);
-        // pc.position.z += 10 * deltaTime;
-        movePlayer(deltaTime, 0, -10);
+        movePlayer(deltaTime, -10, 0);
       },
     });
     input.addAction('left', {
       type: 'held',
       callback: (action, deltaTime) => {
-        // camera.position.x += 10 * deltaTime;
-        movePlayer(deltaTime, 10, 0);
+        movePlayer(deltaTime, 0, -10);
       },
     });
     input.addAction('right', {
       type: 'held',
       callback: (action, deltaTime) => {
-        // camera.position.x -= 10 * deltaTime;
-        movePlayer(deltaTime, -10, 0);
+        movePlayer(deltaTime, 0, 10);
       },
     });
 
