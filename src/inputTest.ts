@@ -5,6 +5,7 @@ import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 // import { ActionManager } from '@babylonjs/core/Actions/actionManager';
 import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
+import { Inspector } from '@babylonjs/inspector';
 
 type ActionName = string;
 type ActionType = 'pressed' | 'held' | 'released';
@@ -102,6 +103,8 @@ class InputTest {
   public logKeyPresses: boolean = false;
   public logActions: boolean = false;
 
+  private _inspectorVisible = false;
+
   private _initKeyMap = (keyMap: KeyActionsMap) => {
     this._keyToActions = keyMap;
 
@@ -177,8 +180,17 @@ class InputTest {
     if (this.logActions) {
       console.log(`Action pressed: ${action}`, event);
     }
+
     if (action === 'inspector') {
-      console.log(`Show or hide inspector`);
+      if (this._inspectorVisible) {
+        console.log(`Hide inspector`);
+        Inspector.Hide();
+        this._inspectorVisible = false;
+      } else {
+        console.log(`Show inspector`);
+        Inspector.Show(this._scene, {});
+        this._inspectorVisible = true;
+      }
     }
   }
 
