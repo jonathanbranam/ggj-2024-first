@@ -25,11 +25,14 @@ export class FirstMovement {
 
     const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
 
-    const [pc] = await loadCharacterA(scene, new Vector3(3, 1, 2));
+    const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
+    pc.addRotation(0, -Math.PI/2, 0);
 
+    const SPEED = 10;
     function movePlayer(deltaTime, amountForward, amountRight) {
       // character mesh faces positive X which is not "forwards" for BabylonJS
-      const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
+      // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
+      const moveVec = pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
       pc.position.addInPlace(moveVec);
       camera.position.addInPlace(moveVec);
     }
@@ -38,25 +41,25 @@ export class FirstMovement {
     input.addAction('forward', {
       type: 'held',
       callback: (action, deltaTime) => {
-        movePlayer(deltaTime, 10, 0);
+        movePlayer(deltaTime, SPEED, 0);
       },
     });
     input.addAction('back', {
       type: 'held',
       callback: (action, deltaTime) => {
-        movePlayer(deltaTime, -10, 0);
+        movePlayer(deltaTime, -SPEED, 0);
       },
     });
     input.addAction('left', {
       type: 'held',
       callback: (action, deltaTime) => {
-        movePlayer(deltaTime, 0, -10);
+        movePlayer(deltaTime, 0, -SPEED);
       },
     });
     input.addAction('right', {
       type: 'held',
       callback: (action, deltaTime) => {
-        movePlayer(deltaTime, 0, 10);
+        movePlayer(deltaTime, 0, SPEED);
       },
     });
 
@@ -68,7 +71,7 @@ export class FirstMovement {
 
 function createCamera(scene: Scene, canvas): Camera {
   // This creates and positions a free camera (non-mesh)
-  var camera = new FreeCamera("camera1", new Vector3(0, 5, 10), scene);
+  var camera = new FreeCamera("camera1", new Vector3(0, 18, 8), scene);
 
   // This targets the camera to scene origin
   camera.setTarget(Vector3.Zero());
