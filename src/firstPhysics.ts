@@ -32,6 +32,7 @@ export class FirstPhysics {
 
     const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
     pc.addRotation(0, -Math.PI/2, 0);
+    pc.position.y = 15;
 
     const SPEED = 10;
     function movePlayer(deltaTime, amountForward, amountRight) {
@@ -76,9 +77,9 @@ export class FirstPhysics {
     this._havokPlugin = new HavokPlugin(true, this._havok);
     scene.enablePhysics(new Vector3(0, -9.8, 0), this._havokPlugin);
 
-    // const pcPhysics = new PhysicsAggregate(pc, PhysicsShapeType.SPHERE,{
-    //   mass: 1, restitution: 0.75,
-    // }, scene);
+    const pcPhysics = new PhysicsAggregate(pc, PhysicsShapeType.SPHERE,{
+      mass: 1, restitution: 0.75,
+    }, scene);
 
     for (const gm of groundMeshes) {
       const groundPhysics = new PhysicsAggregate(gm, PhysicsShapeType.BOX,{
