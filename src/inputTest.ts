@@ -4,12 +4,80 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 // import { ActionManager } from '@babylonjs/core/Actions/actionManager';
-import { ActionManager, ExecuteCodeAction } from '@babylonjs/core';
+import { ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
 
-type Action = string;
-type KeyActionsMap = Record<string, Action[]>;
-type ActionKeysMap = Record<Action, string[]>;
+type ActionName = string;
+type ActionType = 'pressed' | 'held' | 'released';
+type ActionDefinition = ActionType;
+type Action = {
+  name: ActionName,
+  type: ActionType,
+};
+type KeyActionsMap = Record<string, ActionName[]>;
+type ActionKeysMap = Record<ActionName, string[]>;
+type ActionDefinitions = Record<ActionName, ActionDefinition>;
 
+const ACTION_DEFS: Record<ActionName, ActionDefinition> = {
+  'forward': 'held',
+  'back': 'held',
+  'left': 'held',
+  'right': 'held',
+  'inspector': 'pressed',
+}
+
+// Event properties
+// altKey
+// metaKey
+// ctrlKey
+// shiftKey
+// repeat: boolean
+// key: string
+// keyCode: number
+
+function callForAction(
+  actionType: ActionType,
+  inputState: InputState,
+  keyToActions: KeyActionsMap,
+  actionDefs: ActionDefinitions,
+  callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
+  event?: ActionEvent)
+  {
+  // for each key in the down state if it maps to an action call the action
+  // held down handler
+  for (const [key, held] of Object.entries(inputState)) {
+    if (key in keyToActions) {
+      for (const actionName of keyToActions[key]) {
+        const actionDef = ACTION_DEFS[actionName];
+        if (held && actionDef === 'held') {
+          callback(actionName, held, event);
+        }
+      }
+    }
+  }
+}
+
+function callActionForEvent(
+  actionType: ActionType,
+  key: string,
+  inputState: InputState,
+  keyToActions: KeyActionsMap,
+  actionDefs: ActionDefinitions,
+  callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
+  event: ActionEvent)
+  {
+  // for each key in the down state if it maps to an action call the action
+  // held down handler
+  if (key in keyToActions) {
+    for (const actionName of keyToActions[key]) {
+      const actionDef = ACTION_DEFS[actionName];
+      if (actionDef === 'pressed' && event) {
+        if (event.sourceEvent.type === 'keydown' && !event.sourceEvent.repeat) {
+          callback(actionName, true, event);
+        }
+      }
+    }
+  }
+}
 
 const WASD_KEY_MAP: KeyActionsMap = {
   'w': ['forward'],
@@ -32,6 +100,7 @@ class InputTest {
   private _keyToActions: KeyActionsMap;
   private _actionToKeys: ActionKeysMap;
   public logKeyPresses: boolean = false;
+  public logActions: boolean = false;
 
   private _initKeyMap = (keyMap: KeyActionsMap) => {
     this._keyToActions = keyMap;
@@ -65,19 +134,25 @@ class InputTest {
 
     this._scene.actionManager.registerAction(new ExecuteCodeAction(
       ActionManager.OnKeyDownTrigger, (e) => {
-        this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         if (this.logKeyPresses) {
-          console.log(`Key ${e.sourceEvent.key}: ${e.sourceEvent.type}`);
+          console.log(`Key ${e.sourceEvent.key}: ${e.sourceEvent.type}`, e);
+        }
+        this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
+        if (e.sourceEvent.type == "keydown") {
+          callActionForEvent('pressed', e.sourceEvent.key, this.inputState, this._keyToActions, ACTION_DEFS, this.actionDown, e);
         }
       }
     ));
 
     this._scene.actionManager.registerAction(new ExecuteCodeAction(
       ActionManager.OnKeyUpTrigger, (e) => {
-        this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         if (this.logKeyPresses) {
-          console.log(`Key ${e.sourceEvent.key}: ${e.sourceEvent.type}`);
+          console.log(`Key ${e.sourceEvent.key}: ${e.sourceEvent.type}`, e);
         }
+        this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
+        // if (e.sourceEvent.type == "keyup") {
+        callActionForEvent('released', e.sourceEvent.key, this.inputState, this._keyToActions, ACTION_DEFS, this.actionUp, e);
+        // }
       }
     ));
 
@@ -88,41 +163,32 @@ class InputTest {
 
   updateFromInput = () => {
 
-    function callForAction(inputState: InputState, keyToActions: KeyActionsMap, callback: (action: Action, keyState: KeyState)=>void) {
-      // for each key in the down state if it maps to an action call the action
-      // held down handler
-      for (const [key, state] of Object.entries(inputState)) {
-        if (state && key in keyToActions) {
-          for (const action of keyToActions[key]) {
-            callback(action, state);
-          }
-        }
-      }
-    }
+    callForAction('held', this.inputState, this._keyToActions, ACTION_DEFS, this.actionHeldDown);
 
-    callForAction(this.inputState, this._keyToActions, this.actionHeldDown);
+  }
 
-    // for each key in the down state if it maps to an action call the action
-    // held down handler
-    // for (const [key, down] of Object.entries(this.inputState)) {
-    //   if (down && key in this._keyToActions) {
-    //     for (const action of this._keyToActions[key]) {
-    //       this.actionHeldDown(action);
-    //     }
-    //   }
-    // }
-    if ((this.inputState["i"])) {
-      console.log(`Show or hide inspector`);
+  actionUp = (action: string, keyState: KeyState, event?: ActionEvent) => {
+    if (this.logActions) {
+      console.log(`Action released: ${action}`, event);
     }
   }
 
   actionDown = (action: string, keyState: KeyState) => {
-    console.log(`Action pressed: ${action}`);
+    if (this.logActions) {
+      console.log(`Action pressed: ${action}`, event);
+    }
+    if (action === 'inspector') {
+      console.log(`Show or hide inspector`);
+    }
   }
 
   actionHeldDown = (action: string) => {
-    console.log(`Action held: ${action}`);
-    console.log(this.inputState);
+    if (this.logActions) {
+      console.log(`Action held: ${action}`);
+    }
+    if (action === 'forward') {
+      // console.log(`Move forward`);
+    }
   }
 }
 
