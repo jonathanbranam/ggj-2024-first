@@ -7,8 +7,13 @@ import { DefaultLoadingScreen } from '@babylonjs/core/Loading/loadingScreen';
 import { createFirstStepScene } from './firstStep.js';
 import { createLoadingMeshScene } from './loadingMesh';
 import { createInputTestScene } from './inputTest';
+import { createFirstWorldScene } from './firstWorld';
 
 const SCENES = [
+  {
+    name: 'firstWorld',
+    createScene: createFirstWorldScene,
+  },
   {
     name: 'firstStep',
     createScene: createFirstStepScene,
@@ -30,7 +35,7 @@ const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 const engine = new Engine(canvas);
 engine.loadingScreen = new DefaultLoadingScreen(canvas);
 
-const selectedScene = SCENES[1].createScene(engine, canvas);
+const selectedScene = SCENES[0].createScene(engine, canvas);
 
 // Render every frame
 engine.runRenderLoop(() => {
