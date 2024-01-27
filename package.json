@@ -19,6 +19,8 @@
     "@babylonjs/materials": "^6.38.1",
     "@babylonjs/post-processes": "^6.40.0",
     "@babylonjs/procedural-textures": "^6.40.0",
-    "@babylonjs/serializers": "^6.40.0"
+    "@babylonjs/serializers": "^6.40.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1"
   }
 }
