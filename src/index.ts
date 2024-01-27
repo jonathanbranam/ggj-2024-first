@@ -8,8 +8,13 @@ import { createFirstStepScene } from './firstStep.js';
 import { createLoadingMeshScene } from './loadingMesh';
 import { createInputTestScene } from './inputTest';
 import { createFirstWorldScene } from './firstWorld';
+import { createFirstMovementScene } from './firstMovement';
 
 const SCENES = [
+  {
+    name: 'firstMovement',
+    createScene: createFirstMovementScene,
+  },
   {
     name: 'firstWorld',
     createScene: createFirstWorldScene,
