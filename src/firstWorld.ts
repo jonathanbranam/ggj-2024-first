@@ -54,7 +54,7 @@ function createWorld(scene: Scene) {
   createSphere(scene);
 
   const g1 = createGround(scene);
-  const spikeFloor = loadSpikeFloor(scene);
+  const spikeFloor = loadSpikeFloor(scene, new Vector3(3, 1, 0));
 
   return scene;
 }
