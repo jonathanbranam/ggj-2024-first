@@ -29,7 +29,8 @@ export class FirstMovement {
     input.addAction('forward', {
       type: 'held',
       callback: () => {
-        console.log(`Forward held`);
+        // console.log(`Forward held`);
+        camera.position.z -= 0.1;
       },
     });
 

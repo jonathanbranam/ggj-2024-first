@@ -174,11 +174,8 @@ export class GameInput {
   }
 
   private _actionHeldDown = (action: string) => {
-    if (this.logActions) {
-      console.log(`Action held: ${action}`);
-    }
     if (action === 'forward') {
-      console.log(`Move forward`);
+      // console.log(`Move forward`);
     }
   }
 
@@ -192,6 +189,9 @@ export class GameInput {
         for (const actionName of this._keyToActions[key]) {
           const actionDef = this._actionDefs[actionName];
           if (actionDef && held && actionDef.type === 'held') {
+            if (this.logActions) {
+              console.log(`Action held: ${actionName}`);
+            }
             if (actionDef.callback) {
               actionDef.callback(actionName, held, event);
             }
@@ -212,6 +212,9 @@ export class GameInput {
         const actionDef = this._actionDefs[actionName];
         if (actionDef && actionDef.type === 'pressed' && event) {
           if (event.sourceEvent.type === 'keydown' && !event.sourceEvent.repeat) {
+            if (this.logActions) {
+              console.log(`Action pressed: ${actionName}`, event);
+            }
             if (actionDef.callback) {
               actionDef.callback(actionName, true, event);
             }
