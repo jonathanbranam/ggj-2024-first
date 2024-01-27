@@ -31,20 +31,26 @@ type LoadedMesh = [AbstractMesh, AbstractMesh[]];
  * returns __root__
  */
 export function loadGltkMesh(path: string, filename: string, scene: Scene, position?: Vector3): Promise<LoadedMesh> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     SceneLoader.ImportMesh("", path, filename, scene, (meshes: AbstractMesh[]) => {
-      console.log("Mesh imported", meshes);
+      // console.log("Mesh imported", meshes);
+      // return mesh named __root__ and all meshes
       for (const m of meshes) {
         if (m.name === "__root__") {
           // m.addRotation(0, Math.PI, 0);
           if (position) {
             m.position = position;
           }
-          // m.position = new Vector3(3, 1, 0);
           return resolve([m, meshes]);
         }
         // console.log(`Imported mesh ${m.name} at ${m.position}, ${m.rotation}.`);
       }
+      // if no mesh is named __root__ then just return the first one
+      if (meshes.length > 0) {
+        return resolve([meshes[0], meshes]);
+      }
+
+      reject();
     });
   });
 }
@@ -55,22 +61,5 @@ export async function loadBuildingB(scene: Scene, position?: Vector3): Promise<L
 
 export async function loadSpikeFloor(scene: Scene, position?: Vector3): Promise<LoadedMesh> {
   return loadGltkMesh(ASSETS_WORLD, SPIKE_FLOOR, scene, position);
-}
-
-
-export async function loadSpikeFloorOld(scene: Scene): Promise<AbstractMesh[]> {
-  return new Promise((resolve) => {
-    SceneLoader.ImportMesh("", ASSETS_WORLD, SPIKE_FLOOR, scene, (meshes: AbstractMesh[]) => {
-      console.log("Mesh imported", meshes);
-      for (const m of meshes) {
-        if (m.name === "__root__") {
-          // m.addRotation(0, Math.PI, 0);
-          m.position = new Vector3(3, 1, 0);
-        }
-        // console.log(`Imported mesh ${m.name} at ${m.position}, ${m.rotation}.`);
-      }
-      return resolve(meshes);
-    });
-  });
 }
 
