@@ -13,13 +13,15 @@ const SPIKE_FLOOR = "Spike_floor.glb";
 export function createGround(scene: Scene): GroundMesh {
   // Create a grid material
   var material = new GridMaterial("grid", scene);
+  // material.gridRatio = 0.25;
 
-  material.gridRatio = 0.25;
   // Our built-in 'ground' shape.
-  var ground = CreateGround('ground1', { width: 14, height: 6, subdivisions: 2 }, scene);
-
-  // Affect a material
+  var ground = CreateGround('ground1', { width: 14, height: 6, subdivisions: 1 }, scene);
   ground.material = material;
+
+  const g2 = CreateGround('ground2', { width: 14, height: 6, subdivisions: 1 }, scene);
+  g2.material = material;
+  g2.position.z = 6;
 
   return ground;
 }

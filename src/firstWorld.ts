@@ -8,7 +8,7 @@ import { Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
 import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
-import { createGround, loadSpikeFloor, loadBuildingB } from './world/World';
+import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
 function createCamera(scene: Scene, canvas): Camera {
@@ -56,7 +56,6 @@ function createWorld(scene: Scene) {
 
   const g1 = createGround(scene);
   const spikeFloor = loadSpikeFloor(scene, new Vector3(3, 1, 0));
-  loadBuildingB(scene, new Vector3(-3, 0, 0));
 
   return scene;
 }
