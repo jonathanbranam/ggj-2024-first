@@ -105,7 +105,7 @@ export class GameInput {
         }
         this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         if (e.sourceEvent.type == "keydown") {
-          this._callActionForEvent('pressed', e.sourceEvent.key, this._actionDown, e);
+          this._callActionForEvent('pressed', e.sourceEvent.key, e);
         }
       }
     ));
@@ -117,7 +117,7 @@ export class GameInput {
         }
         this.inputState[e.sourceEvent.key] = e.sourceEvent.type == "keydown";
         if (e.sourceEvent.type == "keyup") {
-          this._callActionForEvent('released', e.sourceEvent.key, this._actionUp, e);
+          this._callActionForEvent('released', e.sourceEvent.key, e);
         }
       }
     ));
@@ -144,8 +144,7 @@ export class GameInput {
   }
 
   private _updateFromInput = () => {
-
-    this._callForAction('held', this._actionHeldDown);
+    this._callForAction('held');
 
   }
 
@@ -185,7 +184,6 @@ export class GameInput {
 
   private _callForAction = (
     actionType: ActionType,
-    callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
     event?: ActionEvent) => {
     // for each key in the down state if it maps to an action call the action
     // held down handler
@@ -194,7 +192,9 @@ export class GameInput {
         for (const actionName of this._keyToActions[key]) {
           const actionDef = this._actionDefs[actionName];
           if (actionDef && held && actionDef.type === 'held') {
-            callback(actionName, held, event);
+            if (actionDef.callback) {
+              actionDef.callback(actionName, held, event);
+            }
           }
         }
       }
@@ -204,7 +204,6 @@ export class GameInput {
   private _callActionForEvent = (
     actionType: ActionType,
     key: string,
-    callback: (action: ActionName, keyState: KeyState, event?: ActionEvent) => void,
     event: ActionEvent) => {
     // for each key in the down state if it maps to an action call the action
     // held down handler
@@ -216,7 +215,6 @@ export class GameInput {
             if (actionDef.callback) {
               actionDef.callback(actionName, true, event);
             }
-            callback(actionName, true, event);
           }
         }
 
