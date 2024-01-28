@@ -61,25 +61,40 @@ export class FirstPhysics {
       // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
       if (this.controlType === 'pc') {
         const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
+        const destPosVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
+
+
+
         // this.pc.position.addInPlace(moveVec);
         // this.camera.position.addInPlace(moveVec);
         // this.camera.position = this.pc.position.add(CAMERA_OFFSET);
         // console.log(`Applying force`, moveVec);
-        this.pcBody.applyForce(
-          moveVec,
-          this.pc.position, // world position of force applied
-        );
+
+
 
         // compute a quaternion to look in the direction of movement and then
         // rotation towards it
 
         const lookRotation = Quaternion.FromLookDirectionLH(moveVec, Vector3.Up());
         const result = new Quaternion(0,0,0,0);
-        const goalRot = Quaternion.SmoothToRef(this.pc.rotationQuaternion, lookRotation, deltaTime, 0.2, result);
-        console.log(`lookRotation`, lookRotation);
-        console.log(`goalRot`, goalRot);
+        // const goalRot = Quaternion.SmoothToRef(this.pc.rotationQuaternion, lookRotation, deltaTime, 0.2, result);
+        const goalRot = lookRotation;
+        // console.log(`lookRotation`, lookRotation);
+        // console.log(`goalRot`, goalRot);
         // this.pc.addRotation(0, -Math.PI/2, 0);
-        this.pc.rotationQuaternion = goalRot;
+        // this.pc.rotationQuaternion = goalRot;
+
+        const destPos = this.pc.position.add(destPosVec)
+        console.log(`From ${this.pc.position} to ${destPos}`);
+
+        // this.pcBody.setTargetTransform(destPos, goalRot);
+
+
+        this.pcBody.applyForce(
+          moveVec,
+          this.pc.position, // world position of force applied
+        );
+
 
         // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
         // SetTargetTransform might be useful?
@@ -169,7 +184,7 @@ export class FirstPhysics {
     const pcBody = this.pcBody = new PhysicsBody(this.pc, PhysicsMotionType.DYNAMIC, false, scene)
     pcBody.setMassProperties({
       mass: 1,
-      inertia: Vector3.Zero(), // this blocks rotational impacts
+      inertia: new Vector3(0, 1, 0),
       // centerOfMass, inertia, inertiaOrientation
     });
     pcBody.shape = this.pcShape;
@@ -201,9 +216,8 @@ export class FirstPhysics {
     const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
     this.pc = pc;
     pc.addRotation(0, -Math.PI/2, 0);
-    // pc.addRotation(Math.PI, 0, 0);
     pc.bakeCurrentTransformIntoVertices();
-    pc.position.y = 15;
+    pc.position.y = 5;
 
     this.createCameras(scene, canvas);
     this.setupInput();
