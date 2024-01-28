@@ -313,7 +313,7 @@ export class FirstPhysics {
     //
     const groundShape = new PhysicsShapeBox(
       new Vector3(0, 0, 0),
-      new Quaternion(0,0,0,0),
+      Quaternion.FromEulerAngles(0,0,0),
       new Vector3(4, 1, 4),
       scene,
     );

@@ -1,5 +1,5 @@
 import { Mesh, GroundMesh, CreateBox } from '@babylonjs/core';
-import { Vector3, Vector2 } from '@babylonjs/core/Maths/math.vector';
+import { Quaternion, Vector3, Vector2 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import { GridMaterial } from '@babylonjs/materials/grid/gridMaterial';
@@ -113,10 +113,16 @@ export async function createGround(
       // console.log(`Floor ${i}, ${j}`);
       // const ground = CreateGround(`groundTile-${i}-${j}`, { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
       const ground = floor.clone(`groundTile-${i}-${j}`);
+      const yRot = _.random(0, 3);
+      ground.rotationQuaternion = Quaternion.FromEulerAngles(
+        Math.PI,
+        yRot * Math.PI/2,
+        0,
+      );
       ground.position = new Vector3(
         FLOOR_TILE_SIZE.x*(groundWidth/2) - j*TILE,
         0,
-       -i*TILE
+       -i*TILE,
       );
       // ground.material = material;
       groundMeshes.push(ground);
