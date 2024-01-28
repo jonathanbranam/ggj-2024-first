@@ -2,7 +2,8 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
-import { Ray } from '@babylonjs/core';
+import { Scalar } from '@babylonjs/core/Maths/math.scalar';
+import { Ray, Material } from '@babylonjs/core';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 import { HemisphericLight, Camera, ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
@@ -21,6 +22,7 @@ import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, Physi
 import { RayHelper } from '@babylonjs/core';
 
 import { debugPhysics } from './physics/Physics';
+import * as _ from 'lodash';
 
 const CAMERA_OFFSET = new Vector3(0, 18, 8);
 const SPEED = 10;
@@ -44,12 +46,14 @@ export class FirstPhysics {
 
   private lemming1;
   private lemmingBody;
+  private lemmings: Mesh[] = [];
 
   private pc;
   private lookCamera;
   private followCamera;
 
   private groundMeshes;
+  private materials: Record<string, Material> = {}
 
   private music: Music;
 
@@ -156,6 +160,13 @@ export class FirstPhysics {
       },
     });
 
+    input.addAction('spawnLemming', {
+      type: 'pressed',
+      callback: (action, deltaTime) => {
+        this.spawnLemming();
+      },
+    });
+
   }
 
   setupMusic = async () => {
@@ -184,8 +195,67 @@ export class FirstPhysics {
     lemming1.addRotation(0, -Math.PI/8, 0);
     lemming1.scalingDeterminant = 0.8;
     lemming1.bakeCurrentTransformIntoVertices();
+
+
     lemming1.position = new Vector3(10, 5, -8);
 
+  }
+
+  setupMaterials = async () => {
+    const scene = this.scene;
+
+    const makeMat = (name: string, color: Color3): Material => {
+      let mat = new StandardMaterial(`${name}Lemming`, scene);
+      mat.diffuseColor = color;
+      this.materials[name] = mat;
+      console.log(`Creating red.`);
+      return mat;
+    }
+
+    makeMat("red", Color3.Red());
+    makeMat("green", Color3.Green());
+    makeMat("blue", Color3.Blue());
+
+  }
+
+  spawnLemming = async (position?: Vector3) => {
+    if (!position) {
+      position = new Vector3(10, 15, -8).addInPlace(Vector3.Random(0, 1));
+    } else {
+      position = position.add(Vector3.Random(0, 1));
+    }
+
+    const newLemming = this.lemming1.clone();
+
+    newLemming.physicsBody.disablePreStep = false;
+    newLemming.position = position;
+
+    const materialName = _.sample(Object.keys(this.materials));
+    const material = this.materials[materialName];
+    console.log(`Assigning material ${materialName} to lemming.`, material);
+    newLemming.material = material;
+    const body = _.sample(Object.values(this.materials));
+    const wheels = _.sample(Object.values(this.materials));
+    const nose = _.sample(Object.values(this.materials));
+    for (const node of newLemming.getChildMeshes(false)) {
+      if (node.name.includes("Torus")) {
+        node.material = wheels;
+      } else if (node.name.includes("Cone")) {
+        node.material = nose;
+      } else if (!node.name.includes("Icosphere")) {
+        node.material = body;
+      }
+    }
+
+    this.scene.onAfterRenderObservable.addOnce(() => {
+      newLemming.physicsBody.disablePreStep = true;
+      newLemming.physicsBody.applyForce(
+        new Vector3(Scalar.RandomRange(1,2), 0, Scalar.RandomRange(1,2)),
+        newLemming.position, // world position of force applied
+      );
+    });
+
+    this.lemmings.push(newLemming);
   }
 
   setupPlayer = async () => {
@@ -295,6 +365,7 @@ export class FirstPhysics {
     // Create our first scene.
     const scene = this.scene = new Scene(engine);
 
+    await this.setupMaterials();
     await this.setupPlayer();
 
     await this.createCameras(scene, canvas);

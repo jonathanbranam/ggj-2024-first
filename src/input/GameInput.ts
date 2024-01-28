@@ -41,6 +41,7 @@ const WASD_KEY_MAP: KeyActionsMap = {
   'd': ['right'],
   'i': ['inspector'],
   'm': ['mute'],
+  'y': ['spawnLemming'],
   'o': ['togglePhysics'],
   'l': ['toggleControl'],
   'ArrowUp': ['forward'],
