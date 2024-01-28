@@ -12,7 +12,7 @@ import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
 import HavokPhysics from '@babylonjs/havok';
-import { HavokPlugin, PhysicsShapeCylinder, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+import { PhysicsBody, HavokPlugin, PhysicsShapeCylinder, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
 
 import { debugPhysics } from './physics/Physics';
 
@@ -47,6 +47,7 @@ export class FirstPhysics {
         const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
         this.pc.position.addInPlace(moveVec);
         this.camera.position.addInPlace(moveVec);
+        // SetTargetTransform might be useful?
       } else {
         // const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
         // this.pc.position.addInPlace(moveVec);
@@ -112,14 +113,21 @@ export class FirstPhysics {
     this.pcShape = new PhysicsShapeCylinder(
       new Vector3(5, 10, 0),
       new Vector3(5, 14, 0),
-      3,
+      1,
       scene,
     );
 
-    const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
+    // NOTE: can create the body and shape separately then assign the shape to
+    // the body after the body is created.
+
+    const pcPhysics = new PhysicsAggregate(this.pc, this.pcShape, {
       mass: 1, restitution: 0.75,
     }, scene);
 
+    // const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
+    //   mass: 1, restitution: 0.75,
+    // }, scene);
+    //
     for (const gm of this.groundMeshes) {
       const groundPhysics = new PhysicsAggregate(gm, PhysicsShapeType.BOX,{
         mass: 0,
