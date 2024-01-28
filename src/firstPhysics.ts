@@ -1,5 +1,6 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
+import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
@@ -15,6 +16,8 @@ import HavokPhysics from '@babylonjs/havok';
 import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
 
 import { debugPhysics } from './physics/Physics';
+
+const CAMERA_OFFSET = new Vector3(0, 18, 8);
 
 export class FirstPhysics {
   private scene: Scene;
@@ -42,12 +45,11 @@ export class FirstPhysics {
 
     const SPEED = 10;
     const FORCE = 100;
-    let cameraOffset = new Vector3(0, 18, 8);
 
     this.scene.onBeforeRenderObservable.add(() => {
       if (this.controlType === 'pc') {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
-        const goal = this.pc.position.add(cameraOffset);
+        const goal = this.pc.position.add(CAMERA_OFFSET);
         // this.camera.position = goal;
         const result = new Vector3(0,0,0);
         this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
@@ -61,7 +63,7 @@ export class FirstPhysics {
         const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
         // this.pc.position.addInPlace(moveVec);
         // this.camera.position.addInPlace(moveVec);
-        // this.camera.position = this.pc.position.add(cameraOffset);
+        // this.camera.position = this.pc.position.add(CAMERA_OFFSET);
         // console.log(`Applying force`, moveVec);
         this.pcBody.applyForce(
           moveVec,
@@ -89,6 +91,11 @@ export class FirstPhysics {
       callback: (action) => {
         console.log(`Toggle input control`);
         this.controlType = this.controlType === 'pc' ? 'camera' : 'pc';
+        if (this.controlType === 'camera') {
+          this.scene.activeCamera = this.lookCamera;
+        } else {
+          this.scene.activeCamera = this.followCamera;
+        }
       },
     });
 
@@ -171,7 +178,7 @@ export class FirstPhysics {
       }, scene);
     }
 
-    debugPhysics(scene);
+    // debugPhysics(scene);
 
   }
 
@@ -199,14 +206,21 @@ export class FirstPhysics {
     return scene;
   }
   createCameras = (scene: Scene, canvas) => {
-    // This creates and positions a free camera (non-mesh)
-    this.lookCamera = new FreeCamera("camera1", new Vector3(0, 18, 8), scene);
+    const startPos = this.pc.position.add(CAMERA_OFFSET);
+    // TODO: Use universal camera instead
+    const lookCamera = this.lookCamera = new FreeCamera("freeCamera", startPos, scene);
+    lookCamera.setTarget(new Vector3(0, 0, 0));
+    lookCamera.attachControl(canvas, true);
 
-    // This targets the camera to scene origin
-    this.lookCamera.setTarget(Vector3.Zero());
+    const followCamera = this.followCamera = new FollowCamera("followCamera", startPos, scene);
+    followCamera.radius = 25;
+    followCamera.rotationOffset = -90;
+    followCamera.heightOffset = 18;
+    followCamera.cameraAcceleration = 0.01;
+    followCamera.maxCameraSpeed = 10;
+    followCamera.lockedTarget = this.pc;
 
-    // This attaches the camera to the canvas
-    this.lookCamera.attachControl(canvas, true);
+    scene.activeCamera = followCamera;
   }
 
   createWorld = (scene: Scene) => {
