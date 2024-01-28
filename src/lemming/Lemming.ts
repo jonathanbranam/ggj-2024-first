@@ -15,12 +15,39 @@ export async function loadLemming(scene: Scene, position?: Vector3): Promise<Loa
   return loadGltkMesh(ASSETS_LEMMING,  LEMMING, scene, position);
 }
 
+const FORCE_SCALE = 1;
+const MIN_SPEED = 5;
+
+export class LemmingAI {
+  public mesh: Mesh;
+  public exitPos: Vector3;
+  public speed: number;
+
+  constructor(mesh: Mesh) {
+    this.mesh = mesh;
+    this.exitPos = new Vector3(8, 0, -40*4);
+    this.speed = MIN_SPEED + _.random(0.1, 1.5);
+  }
+
+  update = (deltaTime: number) => {
+    // console.log(`Update ${this.mesh.name}.`);
+    const myPos = this.mesh.position;
+    const dir = this.exitPos.subtract(myPos).normalize();
+
+    const force = dir.scale(this.speed*FORCE_SCALE);
+
+    this.mesh.physicsBody.applyForce(force, myPos);
+  }
+
+}
+
 export class Lemmings {
   private scene: Scene;
   private game: FirstPhysics;
 
   public base: Mesh;
   private lemmings: Mesh[] = [];
+  private lemmingAIs: LemmingAI[] = [];
 
   constructor(_game: FirstPhysics) {
     this.game = _game;
@@ -38,9 +65,21 @@ export class Lemmings {
 
     this.setupNewLemming(base);
     this.lemmings.push(base);
+
+    this.scene.onBeforeRenderObservable.add(this.updateLemmings);
+  }
+
+  updateLemmings = () => {
+    const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+    for (const ai of this.lemmingAIs) {
+      ai.update(deltaTime);
+    }
   }
 
   setupNewLemming = async (newLemming: Mesh) => {
+    const ai = new LemmingAI(newLemming);
+    this.lemmingAIs.push(ai);
+
     const body = _.sample(Object.values(this.game.materials));
     const wheels = _.sample(Object.values(this.game.materials));
     const nose = _.sample(Object.values(this.game.materials));
