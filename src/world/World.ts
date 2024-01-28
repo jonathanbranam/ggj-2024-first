@@ -1,4 +1,4 @@
-import { GroundMesh } from '@babylonjs/core';
+import { GroundMesh, CreateBox } from '@babylonjs/core';
 import { Vector3, Vector2 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
@@ -10,8 +10,11 @@ import { ASSETS_WORLD, ASSETS_BUILDER, ASSETS_MECHA } from '../constants';
 import { loadGltkMesh, LoadedMesh } from '../mesh/Mesh';
 
 const SPIKE_FLOOR = "Spike_floor.glb";
-// const FLOOR_TILE_SIZE = [4, 4];
-const FLOOR_TILE_SIZE = new Vector2(4, 4);
+
+const TILE = 4;
+const FLOOR_TILE_SIZE = new Vector2(TILE, TILE);
+const WALL_THICKNESS = 1;
+const WALL_TILE_SIZE = new Vector3(WALL_THICKNESS, TILE, TILE);
 
 
 export function createGroundOld(scene: Scene): GroundMesh {
@@ -46,13 +49,61 @@ export function createGround(scene: Scene): GroundMesh[] {
   _.range(groundLength).forEach((i) => {
     _.range(groundWidth).forEach((j) => {
       // console.log(`Floor ${i}, ${j}`);
-      const ground = CreateGround('', { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
-      ground.position.x = FLOOR_TILE_SIZE.x*(groundWidth/2) - j*4;
-      ground.position.z = -i*4;
+      const ground = CreateGround(`groundTile-${i}-${j}`, { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
+      ground.position.x = FLOOR_TILE_SIZE.x*(groundWidth/2) - j*TILE;
+      ground.position.z = -i*TILE;
       ground.material = material;
       groundMeshes.push(ground);
     });
   });
+
+  // Create some walls
+
+  const wallLength = groundLength;
+  const leftWall = CreateBox(`leftWall`, { 
+    width: WALL_TILE_SIZE.x,
+    height: WALL_TILE_SIZE.y,
+    depth: groundLength * TILE,
+  }, scene);
+  leftWall.position.x = TILE*(groundWidth/2) + TILE/2;
+  leftWall.position.y = (WALL_TILE_SIZE.y/2);
+  leftWall.position.z = -wallLength*TILE/2 + TILE/2;
+  leftWall.material = material;
+  groundMeshes.push(leftWall);
+
+  const rightWall = CreateBox(`rightWall`, { 
+    width: WALL_TILE_SIZE.x,
+    height: WALL_TILE_SIZE.y,
+    depth: groundLength * TILE,
+  }, scene);
+  rightWall.position.x = -TILE*(groundWidth/2) + TILE/2;
+  rightWall.position.y = (WALL_TILE_SIZE.y/2);
+  rightWall.position.z = -wallLength*TILE/2 + TILE/2;
+  rightWall.material = material;
+  groundMeshes.push(rightWall);
+
+  const backWall = CreateBox(`backWall`, { 
+    width: groundWidth*TILE,
+    height: WALL_TILE_SIZE.y,
+    depth: WALL_THICKNESS,
+  }, scene);
+  backWall.position.x = TILE/2;
+  backWall.position.y = (WALL_TILE_SIZE.y/2);
+  backWall.position.z = TILE/2;
+  backWall.material = material;
+  groundMeshes.push(backWall);
+
+  const endWall = CreateBox(`endWall`, { 
+    width: groundWidth*TILE,
+    height: WALL_TILE_SIZE.y,
+    depth: WALL_THICKNESS,
+  }, scene);
+  endWall.position.x = TILE/2;
+  endWall.position.y = (WALL_TILE_SIZE.y/2);
+  endWall.position.z = -groundLength * TILE + TILE/2;
+  endWall.material = material;
+  groundMeshes.push(endWall);
+
 
   return groundMeshes;
 }

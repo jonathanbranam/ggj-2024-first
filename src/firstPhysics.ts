@@ -27,6 +27,7 @@ export class FirstPhysics {
   private pcShape;
   private lemmingShape;
   private pcBody;
+  private groundBody;
 
   private pc;
   private lookCamera;
@@ -85,7 +86,7 @@ export class FirstPhysics {
         // this.pc.rotationQuaternion = goalRot;
 
         const destPos = this.pc.position.add(destPosVec)
-        console.log(`From ${this.pc.position} to ${destPos}`);
+        // console.log(`From ${this.pc.position} to ${destPos}`);
 
         // this.pcBody.setTargetTransform(destPos, goalRot);
 
