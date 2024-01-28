@@ -10,6 +10,7 @@ import { Mesh, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
 import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
+import { Music } from './music/Music';
 import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
@@ -25,7 +26,6 @@ const SPEED = 10;
 const ANG_SCALE = 0.3;
 const FORCE_SCALE = 3;
 const FORCE = 300;
-
 
 
 export class FirstPhysics {
@@ -46,6 +46,8 @@ export class FirstPhysics {
   private followCamera;
 
   private groundMeshes;
+
+  private music: Music;
 
   private controlType: 'pc' | 'camera' = 'pc';
   private input: GameInput;
@@ -183,6 +185,22 @@ export class FirstPhysics {
 
   }
 
+  setupMusic = async () => {
+    this.music = new Music(this.scene);
+    this.music.play1();
+
+    this.input.addAction('mute', {
+      type: 'pressed',
+      callback: () => {
+        if (this.music.muted) {
+          this.music.unmute();
+        } else {
+          this.music.mute();
+        }
+      },
+    });
+  }
+
   setupGui = async () => {
     const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
   }
@@ -288,6 +306,7 @@ export class FirstPhysics {
     await this.setupInput();
 
     // await this.setupGui();
+    await this.setupMusic();
 
     await this.createWorld(scene);
 

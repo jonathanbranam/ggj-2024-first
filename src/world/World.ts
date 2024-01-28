@@ -43,8 +43,8 @@ export function createGround(scene: Scene): GroundMesh[] {
   // ground.material = material;
   const groundMeshes = [];
 
-  const groundWidth = 4;
-  const groundLength = 12;
+  const groundWidth = 8;
+  const groundLength = 45;
 
   _.range(groundLength).forEach((i) => {
     _.range(groundWidth).forEach((j) => {

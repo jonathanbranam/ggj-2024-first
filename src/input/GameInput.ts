@@ -40,6 +40,7 @@ const WASD_KEY_MAP: KeyActionsMap = {
   's': ['back'],
   'd': ['right'],
   'i': ['inspector'],
+  'm': ['mute'],
   'o': ['togglePhysics'],
   'l': ['toggleControl'],
   'ArrowUp': ['forward'],
