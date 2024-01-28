@@ -12,7 +12,7 @@ import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
 import HavokPhysics from '@babylonjs/havok';
-import { PhysicsBody, HavokPlugin, PhysicsShapeCylinder, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
 
 import { debugPhysics } from './physics/Physics';
 
@@ -23,6 +23,7 @@ export class FirstPhysics {
 
   private pcShape;
   private lemmingShape;
+  private pcBody;
 
   private pc;
   private camera;
@@ -39,14 +40,23 @@ export class FirstPhysics {
     const input = this.input = new GameInput(this.scene);
 
     const SPEED = 10;
+    const FORCE = 100;
+    let cameraOffset = new Vector3(0, 18, 8);
 
     const movePlayer = (deltaTime, amountForward, amountRight) => {
       // character mesh faces positive X which is not "forwards" for BabylonJS
       // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
       if (this.controlType === 'pc') {
-        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
-        this.pc.position.addInPlace(moveVec);
-        this.camera.position.addInPlace(moveVec);
+        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
+        // this.pc.position.addInPlace(moveVec);
+        // this.camera.position.addInPlace(moveVec);
+        this.camera.position = this.pc.position.add(cameraOffset);
+        console.log(`Apoplying force`, moveVec);
+        this.pcBody.applyForce(
+          moveVec,
+          // Vector3.Zero(),
+          this.pc.position,
+        );
         // SetTargetTransform might be useful?
       } else {
         // const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
@@ -105,24 +115,38 @@ export class FirstPhysics {
 
 
     this.lemmingShape = new PhysicsShapeSphere(
-      new Vector3(5, 10, 0),
+      new Vector3(0, 0, 0),
       3,
       scene,
     );
 
-    this.pcShape = new PhysicsShapeCylinder(
-      new Vector3(5, 10, 0),
-      new Vector3(5, 14, 0),
+    this.pcShape = new PhysicsShapeCapsule(
+      new Vector3(0, 0.5, 0),
+      new Vector3(0, 2.5, 0),
       1,
       scene,
     );
+    this.pcShape.material = {
+      friction: 0.2,
+      restitution: 0.3,
+    };
 
     // NOTE: can create the body and shape separately then assign the shape to
     // the body after the body is created.
 
-    const pcPhysics = new PhysicsAggregate(this.pc, this.pcShape, {
-      mass: 1, restitution: 0.75,
-    }, scene);
+    // Probably should be PhysicsMotionType.ANIMATED but then gravity didn't
+    // seem to affect the body
+    const pcBody = this.pcBody = new PhysicsBody(this.pc, PhysicsMotionType.DYNAMIC, false, scene)
+    pcBody.setMassProperties({
+      mass: 1,
+      // centerOfMass, inertia, inertiaOrientation
+    });
+    pcBody.shape = this.pcShape;
+
+    // const pcPhysics = new PhysicsAggregate(this.pc, this.pcShape, {
+    //   mass: 1, restitution: 0.75,
+    // }, scene);
+
 
     // const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
     //   mass: 1, restitution: 0.75,
