@@ -222,6 +222,23 @@ export class FirstPhysics {
     const [pc] = await loadCharacterA(this.scene, new Vector3(0, 0, 0));
     this.pc = pc;
 
+    // color the character
+    const body = _.sample(Object.values(this.materials));
+    const head = _.sample(Object.values(this.materials));
+    const arms = _.sample(Object.values(this.materials));
+    const legs = _.sample(Object.values(this.materials));
+    for (const node of pc.getChildMeshes(false)) {
+      if (node.name === "Sphere") {
+        node.material = head;
+      } else if (node.name === "Cylinder") {
+        node.material = body;
+      } else if (node.name.includes("Cube.001")) {
+        node.material = arms;
+      } else if (node.name.includes("Cylinder.00")) {
+        node.material = legs;
+      }
+    }
+
     pc.addRotation(0, -Math.PI/2, 0);
     pc.bakeCurrentTransformIntoVertices();
     pc.position.y = 5;
@@ -302,15 +319,6 @@ export class FirstPhysics {
     pcBody.setLinearDamping(1);
     pcBody.setAngularDamping(5);
 
-    // const pcPhysics = new PhysicsAggregate(this.pc, this.pcShape, {
-    //   mass: 1, restitution: 0.75,
-    // }, scene);
-
-
-    // const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
-    //   mass: 1, restitution: 0.75,
-    // }, scene);
-    //
     const groundShape = new PhysicsShapeBox(
       new Vector3(0, 0, 0),
       Quaternion.FromEulerAngles(0,0,0),

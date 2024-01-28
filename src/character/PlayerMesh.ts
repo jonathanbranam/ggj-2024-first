@@ -5,8 +5,10 @@ import { ASSETS_CHARACTER } from '../constants';
 
 import { loadGltkMesh, LoadedMesh } from '../mesh/Mesh';
 
-const CHARACTER_A = "Character.glb";
+const CHARACTER_ORIG = "Character_first.glb";
+const CHARACTER_B = "Character_new.glb";
+const CHARACTER_CUR = "Character.glb";
 
 export async function loadCharacterA(scene: Scene, position?: Vector3): Promise<LoadedMesh> {
-  return loadGltkMesh(ASSETS_CHARACTER,  CHARACTER_A, scene, position);
+  return loadGltkMesh(ASSETS_CHARACTER,  CHARACTER_B, scene, position);
 }

@@ -37,6 +37,7 @@ export class Lemmings {
     base.position = new Vector3(10, 5, -8);
 
     this.setupNewLemming(base);
+    this.lemmings.push(base);
   }
 
   setupNewLemming = async (newLemming: Mesh) => {
@@ -62,7 +63,7 @@ export class Lemmings {
       position = position.add(Vector3.Random(0, 1));
     }
 
-    const newLemming = this.base.clone();
+    const newLemming = this.base.clone(`lemming-${this.lemmings.length}`);
 
     newLemming.physicsBody.disablePreStep = false;
     newLemming.position = position;

@@ -110,8 +110,6 @@ export async function createGround(
 
   _.range(groundLength).forEach((i) => {
     _.range(groundWidth).forEach((j) => {
-      // console.log(`Floor ${i}, ${j}`);
-      // const ground = CreateGround(`groundTile-${i}-${j}`, { width: FLOOR_TILE_SIZE.x, height: FLOOR_TILE_SIZE.y, subdivisions: 1 }, scene);
       const ground = floor.clone(`groundTile-${i}-${j}`);
       const yRot = _.random(0, 3);
       ground.rotationQuaternion = Quaternion.FromEulerAngles(
