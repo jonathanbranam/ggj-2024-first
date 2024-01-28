@@ -12,12 +12,17 @@ import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 
 import HavokPhysics from '@babylonjs/havok';
-import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+import { HavokPlugin, PhysicsShapeCylinder, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+
+import { debugPhysics } from './physics/Physics';
 
 export class FirstPhysics {
   private scene: Scene;
   private havok;
   private havokPlugin;
+
+  private pcShape;
+  private lemmingShape;
 
   private pc;
   private camera;
@@ -48,6 +53,13 @@ export class FirstPhysics {
         // this.camera.position.addInPlace(moveVec);
       }
     }
+
+    input.addAction('togglePhysics', {
+      type: 'pressed',
+      callback: (action) => {
+        debugPhysics(this.scene);
+      },
+    });
 
     input.addAction('toggleControl', {
       type: 'pressed',
@@ -90,6 +102,20 @@ export class FirstPhysics {
     this.havokPlugin = new HavokPlugin(true, this.havok);
     scene.enablePhysics(new Vector3(0, -9.8, 0), this.havokPlugin);
 
+
+    this.lemmingShape = new PhysicsShapeSphere(
+      new Vector3(5, 10, 0),
+      3,
+      scene,
+    );
+
+    this.pcShape = new PhysicsShapeCylinder(
+      new Vector3(5, 10, 0),
+      new Vector3(5, 14, 0),
+      3,
+      scene,
+    );
+
     const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
       mass: 1, restitution: 0.75,
     }, scene);
@@ -100,6 +126,7 @@ export class FirstPhysics {
       }, scene);
     }
 
+    debugPhysics(scene);
 
   }
 
