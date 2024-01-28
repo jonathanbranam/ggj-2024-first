@@ -15,35 +15,48 @@ import HavokPhysics from '@babylonjs/havok';
 import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
 
 export class FirstPhysics {
-  private _scene: Scene;
-  private _havok;
-  private _havokPlugin;
+  private scene: Scene;
+  private havok;
+  private havokPlugin;
+
+  private pc;
+  private camera;
+
+  private groundMeshes;
+
+  private controlType: 'pc' | 'camera' = 'pc';
+  private input: GameInput;
 
   constructor() {
   }
 
-  createScene = async (engine: Engine, canvas) => {
-    // Create our first scene.
-    const scene = new Scene(engine);
-
-    const camera = createCamera(scene, canvas);
-
-    const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
-
-    const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
-    pc.addRotation(0, -Math.PI/2, 0);
-    pc.position.y = 15;
+  setupInput = () => {
+    const input = this.input = new GameInput(this.scene);
 
     const SPEED = 10;
-    function movePlayer(deltaTime, amountForward, amountRight) {
+
+    const movePlayer = (deltaTime, amountForward, amountRight) => {
       // character mesh faces positive X which is not "forwards" for BabylonJS
       // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
-      const moveVec = pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
-      pc.position.addInPlace(moveVec);
-      camera.position.addInPlace(moveVec);
+      if (this.controlType === 'pc') {
+        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
+        this.pc.position.addInPlace(moveVec);
+        this.camera.position.addInPlace(moveVec);
+      } else {
+        // const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
+        // this.pc.position.addInPlace(moveVec);
+        // this.camera.position.addInPlace(moveVec);
+      }
     }
 
-    const input = new GameInput(scene);
+    input.addAction('toggleControl', {
+      type: 'pressed',
+      callback: (action) => {
+        console.log(`Toggle input control`);
+        this.controlType = this.controlType === 'pc' ? 'camera' : 'pc';
+      },
+    });
+
     input.addAction('forward', {
       type: 'held',
       callback: (action, deltaTime) => {
@@ -69,24 +82,47 @@ export class FirstPhysics {
       },
     });
 
-    createWorld(scene);
+  }
 
-    const groundMeshes = createGround(scene);
+  setupPhysics = async () => {
+    const scene = this.scene;
+    this.havok = await HavokPhysics();
+    this.havokPlugin = new HavokPlugin(true, this.havok);
+    scene.enablePhysics(new Vector3(0, -9.8, 0), this.havokPlugin);
 
-    this._havok = await HavokPhysics();
-    this._havokPlugin = new HavokPlugin(true, this._havok);
-    scene.enablePhysics(new Vector3(0, -9.8, 0), this._havokPlugin);
-
-    const pcPhysics = new PhysicsAggregate(pc, PhysicsShapeType.SPHERE,{
+    const pcPhysics = new PhysicsAggregate(this.pc, PhysicsShapeType.SPHERE,{
       mass: 1, restitution: 0.75,
     }, scene);
 
-    for (const gm of groundMeshes) {
+    for (const gm of this.groundMeshes) {
       const groundPhysics = new PhysicsAggregate(gm, PhysicsShapeType.BOX,{
         mass: 0,
       }, scene);
     }
 
+
+  }
+
+  createScene = async (engine: Engine, canvas) => {
+    // Create our first scene.
+    const scene = new Scene(engine);
+    this.scene = scene;
+
+    const camera = this.camera = createCamera(scene, canvas);
+    const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
+    this.pc = pc;
+    pc.addRotation(0, -Math.PI/2, 0);
+    pc.position.y = 15;
+
+    this.setupInput();
+
+    const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
+
+    createWorld(scene);
+
+    this.groundMeshes = createGround(scene);
+
+    await this.setupPhysics();
 
     return scene;
   }
