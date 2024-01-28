@@ -25,7 +25,7 @@ import { debugPhysics } from './physics/Physics';
 const CAMERA_OFFSET = new Vector3(0, 18, 8);
 const SPEED = 10;
 const ANG_SCALE = 0.3;
-const FORCE_SCALE = 3;
+const FORCE_SCALE = 15;
 const FORCE = 300;
 
 
@@ -74,46 +74,22 @@ export class FirstPhysics {
 
     const movePlayer = (deltaTime, amountForward, amountRight) => {
       // character mesh faces positive X which is not "forwards" for BabylonJS
-      // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
       if (this.controlType === 'pc') {
-        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).scale(FORCE);
-        const destPosVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
 
         const curRot = this.pc.rotationQuaternion;
 
         const forward = new Vector3(0, 0, -1);
         const right = new Vector3(1, 0, 0);
-        right.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
-        forward.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
+        right.applyRotationQuaternionInPlace(curRot);
+        forward.applyRotationQuaternionInPlace(curRot);
 
         const forces = forward
           .scale(amountForward)
           .add(right.scale(-amountRight))
           .scale(FORCE_SCALE);
 
-        // this.pc.position.addInPlace(moveVec);
-        // this.camera.position.addInPlace(moveVec);
-        // this.camera.position = this.pc.position.add(CAMERA_OFFSET);
-        // console.log(`Applying force`, moveVec);
-
-
-
         // compute a quaternion to look in the direction of movement and then
         // rotation towards it
-
-        const lookRotation = Quaternion.FromLookDirectionLH(moveVec, Vector3.Up());
-        const result = new Quaternion(0,0,0,0);
-        // const goalRot = Quaternion.SmoothToRef(this.pc.rotationQuaternion, lookRotation, deltaTime, 0.2, result);
-        const goalRot = lookRotation;
-        // console.log(`lookRotation`, lookRotation);
-        // console.log(`goalRot`, goalRot);
-        // this.pc.addRotation(0, -Math.PI/2, 0);
-        // this.pc.rotationQuaternion = goalRot;
-
-        const destPos = this.pc.position.add(destPosVec)
-        // console.log(`From ${this.pc.position} to ${destPos}`);
-
-        // this.pcBody.setTargetTransform(destPos, goalRot);
 
         this.pcBody.applyForce(
           forces,
@@ -125,13 +101,6 @@ export class FirstPhysics {
         } else if (amountRight < 0) {
           this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE, 0));
         }
-
-
-        // this.pcBody.applyForce(
-        //   moveVec,
-        //   this.pc.position, // world position of force applied
-        // );
-
 
         // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
         // SetTargetTransform might be useful?
@@ -213,6 +182,7 @@ export class FirstPhysics {
     const [lemming1] = await loadLemming(this.scene);
     this.lemming1 = lemming1;
     lemming1.addRotation(0, -Math.PI/8, 0);
+    lemming1.scalingDeterminant = 0.8;
     lemming1.bakeCurrentTransformIntoVertices();
     lemming1.position = new Vector3(10, 5, -8);
 
@@ -221,7 +191,6 @@ export class FirstPhysics {
   setupPlayer = async () => {
     const [pc] = await loadCharacterA(this.scene, new Vector3(0, 0, 0));
     this.pc = pc;
-
 
     pc.addRotation(0, -Math.PI/2, 0);
     pc.bakeCurrentTransformIntoVertices();
@@ -261,7 +230,7 @@ export class FirstPhysics {
 
     this.lemmingShape = new PhysicsShapeSphere(
       new Vector3(0, 0, 0),
-      2,
+      1.1,
       scene,
     );
     const lemmingBody = this.lemmingBody = new PhysicsBody(
