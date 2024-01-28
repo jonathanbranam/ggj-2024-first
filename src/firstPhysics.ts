@@ -2,6 +2,7 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { Ray } from '@babylonjs/core';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 import { HemisphericLight, Camera, ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
@@ -14,6 +15,8 @@ import { loadCharacterA } from './character/PlayerMesh';
 
 import HavokPhysics from '@babylonjs/havok';
 import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+
+import { RayHelper } from '@babylonjs/core';
 
 import { debugPhysics } from './physics/Physics';
 
@@ -28,6 +31,8 @@ export class FirstPhysics {
   private lemmingShape;
   private pcBody;
   private groundBody;
+  private pcFacingRay;
+  private pcFacingRayHelper;
 
   private pc;
   private lookCamera;
@@ -63,6 +68,8 @@ export class FirstPhysics {
       if (this.controlType === 'pc') {
         const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
         const destPosVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
+
+        const curRot = this.pc.rotationQuaternion;
 
 
 
@@ -153,6 +160,31 @@ export class FirstPhysics {
 
   }
 
+  setupGui = async () => {
+    const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
+  }
+
+  setupPlayer = async () => {
+    const [pc] = await loadCharacterA(this.scene, new Vector3(0, 0, 0));
+    this.pc = pc;
+
+
+    pc.addRotation(0, -Math.PI/2, 0);
+    pc.bakeCurrentTransformIntoVertices();
+    pc.position.y = 5;
+
+    this.pcFacingRay = new Ray(this.pc.position, Vector3.Forward(), 3);
+    this.pcFacingRayHelper = RayHelper.CreateAndShow(this.pcFacingRay, this.scene, Color3.Red());
+
+    this.scene.onBeforeRenderObservable.add(() => {
+      // this.pcFacingRay.origin = this.pc.position.add(new Vector3(0,2,0));
+      this.pcFacingRay.origin = this.pc.position;
+      const forward = Vector3.Forward();
+      forward.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
+      this.pcFacingRay.direction = forward;
+    });
+  }
+
   setupPhysics = async () => {
     const scene = this.scene;
     this.havok = await HavokPhysics();
@@ -211,21 +243,16 @@ export class FirstPhysics {
 
   createScene = async (engine: Engine, canvas) => {
     // Create our first scene.
-    const scene = new Scene(engine);
-    this.scene = scene;
+    const scene = this.scene = new Scene(engine);
 
-    const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
-    this.pc = pc;
-    pc.addRotation(0, -Math.PI/2, 0);
-    pc.bakeCurrentTransformIntoVertices();
-    pc.position.y = 5;
+    await this.setupPlayer();
 
-    this.createCameras(scene, canvas);
-    this.setupInput();
+    await this.createCameras(scene, canvas);
+    await this.setupInput();
 
-    const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
+    // await this.setupGui();
 
-    this.createWorld(scene);
+    await this.createWorld(scene);
 
     this.groundMeshes = createGround(scene);
 
@@ -234,7 +261,7 @@ export class FirstPhysics {
     return scene;
   }
 
-  createCameras = (scene: Scene, canvas) => {
+  createCameras = async (scene: Scene, canvas) => {
     const startPos = this.pc.position.add(CAMERA_OFFSET);
     // TODO: Use universal camera instead
     const lookCamera = this.lookCamera = new FreeCamera("freeCamera", startPos, scene);
