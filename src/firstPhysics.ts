@@ -43,6 +43,17 @@ export class FirstPhysics {
     const FORCE = 100;
     let cameraOffset = new Vector3(0, 18, 8);
 
+    this.scene.onBeforeRenderObservable.add(() => {
+      if (this.controlType === 'pc') {
+        const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+        const goal = this.pc.position.add(cameraOffset);
+        // this.camera.position = goal;
+        // this.camera.position = Vector3.SmoothToRef(this.camera.position, goal, deltaTime, 0.5);
+        const result = new Vector3(0,0,0);
+        this.camera.position = Vector3.SmoothToRef(this.camera.position, goal, deltaTime, 0.2, result);
+      }
+    });
+
     const movePlayer = (deltaTime, amountForward, amountRight) => {
       // character mesh faces positive X which is not "forwards" for BabylonJS
       // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
@@ -50,7 +61,7 @@ export class FirstPhysics {
         const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
         // this.pc.position.addInPlace(moveVec);
         // this.camera.position.addInPlace(moveVec);
-        this.camera.position = this.pc.position.add(cameraOffset);
+        // this.camera.position = this.pc.position.add(cameraOffset);
         console.log(`Apoplying force`, moveVec);
         this.pcBody.applyForce(
           moveVec,
