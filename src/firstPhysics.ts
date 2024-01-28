@@ -214,7 +214,7 @@ export class FirstPhysics {
   }
 
   spawnLemming = async (position?: Vector3) => {
-    this.lemmings.spawnLemming(position);
+    return this.lemmings.spawnLemming(position);
   }
 
   setupPlayer = async () => {

@@ -82,6 +82,11 @@ export class Lemmings {
   private lemmings: Mesh[] = [];
   private lemmingAIs: LemmingAI[] = [];
 
+  public spawnLocation = new Vector3(10, 15, -8);
+  public lastSpawn = 0;
+  public spawnTime = 5;
+  public maxLemmings = 100;
+
   constructor(_game: FirstPhysics) {
     this.game = _game;
     this.scene = _game.scene;
@@ -99,7 +104,9 @@ export class Lemmings {
     this.setupNewLemming(base);
     this.lemmings.push(base);
 
-    this.scene.onBeforeRenderObservable.add(this.updateLemmings);
+    this.scene.onBeforeRenderObservable.add(() => {
+      this.updateLemmings();
+    });
   }
 
   cleanupAI = (ai: LemmingAI) => {
@@ -108,6 +115,7 @@ export class Lemmings {
 
   updateLemmings = () => {
     const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+
     const needUpdate = [...this.lemmingAIs];
 
     for (const ai of needUpdate) {
@@ -125,6 +133,16 @@ export class Lemmings {
         return true;
       }
     });
+
+    if (this.lemmingAIs.length < this.maxLemmings) {
+      this.lastSpawn += deltaTime;
+      if (this.lastSpawn >= this.spawnTime) {
+        this.lastSpawn = 0;
+        this.scene.onBeforeRenderObservable.addOnce(async () => {
+          return this.spawnLemming();
+        });
+      }
+    }
   }
 
   setupNewLemming = async (newLemming: Mesh) => {
@@ -148,7 +166,7 @@ export class Lemmings {
 
   spawnLemming = async (position?: Vector3) => {
     if (!position) {
-      position = new Vector3(10, 15, -8).addInPlace(Vector3.Random(0, 1));
+      position = this.spawnLocation.add(Vector3.Random(0, 2));
     } else {
       position = position.add(Vector3.Random(0, 1));
     }
