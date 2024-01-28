@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   mode: "development",
   resolve: {
@@ -8,6 +10,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: "ts-loader",
+        exclude: [path.resolve(__dirname,'@babylonjs/')],
       },
     ],
   },
