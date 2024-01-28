@@ -13,6 +13,7 @@ import { GameInput } from './input/GameInput';
 import { Music } from './music/Music';
 import { createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
+import { loadLemming } from './lemming/Lemming';
 
 import HavokPhysics from '@babylonjs/havok';
 import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
@@ -40,6 +41,9 @@ export class FirstPhysics {
   private pcFacingRay;
   private pcBackRay;
   private pcFacingRayHelper;
+
+  private lemming1;
+  private lemmingBody;
 
   private pc;
   private lookCamera;
@@ -205,6 +209,15 @@ export class FirstPhysics {
     const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
   }
 
+  setupLemmings = async () => {
+    const [lemming1] = await loadLemming(this.scene);
+    this.lemming1 = lemming1;
+    lemming1.addRotation(0, -Math.PI/8, 0);
+    lemming1.bakeCurrentTransformIntoVertices();
+    lemming1.position = new Vector3(10, 5, -8);
+
+  }
+
   setupPlayer = async () => {
     const [pc] = await loadCharacterA(this.scene, new Vector3(0, 0, 0));
     this.pc = pc;
@@ -248,9 +261,20 @@ export class FirstPhysics {
 
     this.lemmingShape = new PhysicsShapeSphere(
       new Vector3(0, 0, 0),
-      3,
+      2,
       scene,
     );
+    const lemmingBody = this.lemmingBody = new PhysicsBody(
+      this.lemming1, PhysicsMotionType.DYNAMIC, false, scene
+    );
+    lemmingBody.setMassProperties({
+      mass: 1,
+      inertia: new Vector3(0, 1, 0),
+      // centerOfMass, inertia, inertiaOrientation
+    });
+    lemmingBody.shape = this.lemmingShape;
+    // lemmingBody.setLinearDamping(1);
+    // lemmingBody.setAngularDamping(5);
 
     // player physics
 
@@ -267,9 +291,11 @@ export class FirstPhysics {
 
     // Probably should be PhysicsMotionType.ANIMATED but then gravity didn't
     // seem to affect the body
-    const pcBody = this.pcBody = new PhysicsBody(this.pc, PhysicsMotionType.DYNAMIC, false, scene)
+    const pcBody = this.pcBody = new PhysicsBody(
+      this.pc, PhysicsMotionType.DYNAMIC, false, scene
+    );
     pcBody.setMassProperties({
-      mass: 1,
+      mass: 5,
       inertia: new Vector3(0, 1, 0),
       // centerOfMass, inertia, inertiaOrientation
     });
@@ -309,6 +335,8 @@ export class FirstPhysics {
     await this.setupMusic();
 
     await this.createWorld(scene);
+
+    await this.setupLemmings();
 
     this.groundMeshes = createGround(scene);
 
