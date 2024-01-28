@@ -21,6 +21,12 @@ import { RayHelper } from '@babylonjs/core';
 import { debugPhysics } from './physics/Physics';
 
 const CAMERA_OFFSET = new Vector3(0, 18, 8);
+const SPEED = 10;
+const ANG_SCALE = 0.3;
+const FORCE_SCALE = 3;
+const FORCE = 300;
+
+
 
 export class FirstPhysics {
   private scene: Scene;
@@ -32,6 +38,7 @@ export class FirstPhysics {
   private pcBody;
   private groundBody;
   private pcFacingRay;
+  private pcBackRay;
   private pcFacingRayHelper;
 
   private pc;
@@ -49,9 +56,6 @@ export class FirstPhysics {
   setupInput = () => {
     const input = this.input = new GameInput(this.scene);
 
-    const SPEED = 10;
-    const FORCE = 100;
-
     this.scene.onBeforeRenderObservable.add(() => {
       if (this.controlType === 'pc') {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
@@ -66,12 +70,20 @@ export class FirstPhysics {
       // character mesh faces positive X which is not "forwards" for BabylonJS
       // const moveVec = pc.calcRotatePOV(-amountForward * deltaTime, 0, amountRight * deltaTime);
       if (this.controlType === 'pc') {
-        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).multiplyInPlace(new Vector3(FORCE, FORCE, FORCE));
+        const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime).scale(FORCE);
         const destPosVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
 
         const curRot = this.pc.rotationQuaternion;
 
+        const forward = new Vector3(0, 0, -1);
+        const right = new Vector3(1, 0, 0);
+        right.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
+        forward.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
 
+        const forces = forward
+          .scale(amountForward)
+          .add(right.scale(-amountRight))
+          .scale(FORCE_SCALE);
 
         // this.pc.position.addInPlace(moveVec);
         // this.camera.position.addInPlace(moveVec);
@@ -97,11 +109,22 @@ export class FirstPhysics {
 
         // this.pcBody.setTargetTransform(destPos, goalRot);
 
-
         this.pcBody.applyForce(
-          moveVec,
+          forces,
           this.pc.position, // world position of force applied
         );
+
+        if (amountRight > 0) {
+          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE, 0));
+        } else if (amountRight < 0) {
+          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE, 0));
+        }
+
+
+        // this.pcBody.applyForce(
+        //   moveVec,
+        //   this.pc.position, // world position of force applied
+        // );
 
 
         // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
@@ -172,16 +195,28 @@ export class FirstPhysics {
     pc.addRotation(0, -Math.PI/2, 0);
     pc.bakeCurrentTransformIntoVertices();
     pc.position.y = 5;
+    pc.position.z = -5;
 
-    this.pcFacingRay = new Ray(this.pc.position, Vector3.Forward(), 3);
-    this.pcFacingRayHelper = RayHelper.CreateAndShow(this.pcFacingRay, this.scene, Color3.Red());
+    this.pcFacingRay = new Ray(this.pc.position.clone(), new Vector3(0, 0, -1), 2);
+    this.pcBackRay = new Ray(this.pc.position.clone(), new Vector3(0, 0, 1), 2);
+    this.pcFacingRayHelper = RayHelper.CreateAndShow(this.pcFacingRay, this.scene, Color3.Green());
+    RayHelper.CreateAndShow(this.pcBackRay, this.scene, Color3.Red());
 
     this.scene.onBeforeRenderObservable.add(() => {
-      // this.pcFacingRay.origin = this.pc.position.add(new Vector3(0,2,0));
-      this.pcFacingRay.origin = this.pc.position;
-      const forward = Vector3.Forward();
+      const forward = new Vector3(0, 0, -1);
+      const up = new Vector3(0, 1, 0);
       forward.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
+      up.applyRotationQuaternionInPlace(this.pc.rotationQuaternion);
+
+      let newPos = this.pc.position.clone();
+      newPos.addInPlace(up.scale(2));
+
+      this.pcFacingRay.origin = newPos;
+      this.pcBackRay.origin = newPos;
+      // this.pcFacingRay.origin = this.pc.position;
+
       this.pcFacingRay.direction = forward;
+      this.pcBackRay.direction = forward.scale(-1);
     });
   }
 
@@ -221,6 +256,8 @@ export class FirstPhysics {
       // centerOfMass, inertia, inertiaOrientation
     });
     pcBody.shape = this.pcShape;
+    pcBody.setLinearDamping(1);
+    pcBody.setAngularDamping(5);
 
     // const pcPhysics = new PhysicsAggregate(this.pc, this.pcShape, {
     //   mass: 1, restitution: 0.75,
