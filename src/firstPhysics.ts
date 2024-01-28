@@ -1,7 +1,7 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { AdvancedDynamicTexture } from '@babylonjs/gui';
 import { HemisphericLight, Camera, ActionManager, ExecuteCodeAction, ActionEvent, IKeyboardEvent } from '@babylonjs/core';
@@ -69,7 +69,18 @@ export class FirstPhysics {
           moveVec,
           this.pc.position, // world position of force applied
         );
-        // const result = new Vector3(0,0,0);
+
+        // compute a quaternion to look in the direction of movement and then
+        // rotation towards it
+
+        const lookRotation = Quaternion.FromLookDirectionLH(moveVec, Vector3.Up());
+        const result = new Quaternion(0,0,0,0);
+        const goalRot = Quaternion.SmoothToRef(this.pc.rotationQuaternion, lookRotation, deltaTime, 0.2, result);
+        console.log(`lookRotation`, lookRotation);
+        console.log(`goalRot`, goalRot);
+        // this.pc.addRotation(0, -Math.PI/2, 0);
+        this.pc.rotationQuaternion = goalRot;
+
         // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
         // SetTargetTransform might be useful?
       } else {
@@ -190,6 +201,8 @@ export class FirstPhysics {
     const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
     this.pc = pc;
     pc.addRotation(0, -Math.PI/2, 0);
+    // pc.addRotation(Math.PI, 0, 0);
+    pc.bakeCurrentTransformIntoVertices();
     pc.position.y = 15;
 
     this.createCameras(scene, canvas);
@@ -205,6 +218,7 @@ export class FirstPhysics {
 
     return scene;
   }
+
   createCameras = (scene: Scene, canvas) => {
     const startPos = this.pc.position.add(CAMERA_OFFSET);
     // TODO: Use universal camera instead
@@ -214,7 +228,7 @@ export class FirstPhysics {
 
     const followCamera = this.followCamera = new FollowCamera("followCamera", startPos, scene);
     followCamera.radius = 25;
-    followCamera.rotationOffset = -90;
+    // followCamera.rotationOffset = -90;
     followCamera.heightOffset = 18;
     followCamera.cameraAcceleration = 0.01;
     followCamera.maxCameraSpeed = 10;
