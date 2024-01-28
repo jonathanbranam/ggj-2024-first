@@ -82,9 +82,9 @@ export class Lemmings {
   private lemmings: Mesh[] = [];
   private lemmingAIs: LemmingAI[] = [];
 
-  public spawnLocation = new Vector3(10, 15, -8);
+  public spawnLocation = new Vector3(10, 5, -8);
   public lastSpawn = 0;
-  public spawnTime = 5;
+  public spawnTime = 3;
   public maxLemmings = 100;
 
   constructor(_game: FirstPhysics) {
@@ -138,9 +138,12 @@ export class Lemmings {
       this.lastSpawn += deltaTime;
       if (this.lastSpawn >= this.spawnTime) {
         this.lastSpawn = 0;
-        this.scene.onBeforeRenderObservable.addOnce(async () => {
+        // NOTE: I can't figure this out, I tried putting this in
+        // onBeforeRenderObservable and onAfterRenderObservable but it
+        // kept causing problems with the disablePreStep I think.
+        setTimeout(() => {
           return this.spawnLemming();
-        });
+        }, 50);
       }
     }
   }
