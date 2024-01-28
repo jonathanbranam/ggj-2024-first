@@ -15,28 +15,61 @@ export async function loadLemming(scene: Scene, position?: Vector3): Promise<Loa
   return loadGltkMesh(ASSETS_LEMMING,  LEMMING, scene, position);
 }
 
-const FORCE_SCALE = 1;
+const FORCE_SCALE = 100;
 const MIN_SPEED = 5;
+
+// distance to be considered in the goal
+const GOAL_DIST = 5;
+// how long they have to be in the goal to leave
+const GOAL_TIME = 3;
+
+type UpdateResult = "none" | "achieved" | "in_goal";
 
 export class LemmingAI {
   public mesh: Mesh;
   public exitPos: Vector3;
   public speed: number;
 
+  public goal: Vector3;
+  public timeToGoal: number;
+
+  public timeInGoal: number = 0;
+  public lastResult: UpdateResult = "none";
+
   constructor(mesh: Mesh) {
     this.mesh = mesh;
     this.exitPos = new Vector3(8, 0, -40*4);
-    this.speed = MIN_SPEED + _.random(0.1, 1.5);
+    this.speed = MIN_SPEED + _.random(0.0, 1.5);
+    console.log(`Lemming ${mesh.name} speed ${this.speed}`);
   }
 
-  update = (deltaTime: number) => {
-    // console.log(`Update ${this.mesh.name}.`);
+  update = (deltaTime: number): UpdateResult => {
     const myPos = this.mesh.position;
-    const dir = this.exitPos.subtract(myPos).normalize();
+    const vectorToGoal = this.exitPos.subtract(myPos);
+    const distToGaol = vectorToGoal.length();
 
-    const force = dir.scale(this.speed*FORCE_SCALE);
+    if (distToGaol < GOAL_DIST) {
+      this.timeInGoal += deltaTime;
+      if (this.timeInGoal > GOAL_TIME) {
+        this.lastResult = "achieved";
+        return this.lastResult;
+      } else {
+        this.lastResult = "in_goal";
+        return this.lastResult;
+      }
+    } else if (this.timeInGoal > 0) {
+      this.timeInGoal -= deltaTime;
+    }
+
+    // console.log(`${this.mesh.name} distance: ${distToGaol.toFixed(2)}`);
+    const dir = vectorToGoal.normalize();
+
+    const force = dir.scale(this.speed*FORCE_SCALE*deltaTime);
 
     this.mesh.physicsBody.applyForce(force, myPos);
+
+    this.lastResult = "none";
+    return this.lastResult;
   }
 
 }
@@ -69,11 +102,35 @@ export class Lemmings {
     this.scene.onBeforeRenderObservable.add(this.updateLemmings);
   }
 
+  cleanupAI = (ai: LemmingAI) => {
+    ai.mesh.dispose();
+  }
+
   updateLemmings = () => {
     const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
-    for (const ai of this.lemmingAIs) {
-      ai.update(deltaTime);
+    const needUpdate = [...this.lemmingAIs];
+
+    for (const ai of needUpdate) {
+      const result = ai.update(deltaTime);
+      if (["in_goal"].includes(result)) {
+        // console.log(`Lemming ${ai.mesh.name} ${result}`);
+      }
+      if (["achieved"].includes(result)) {
+        // console.log(`Lemming ${ai.mesh.name} ${result}`);
+      }
     }
+
+    this.lemmingAIs = this.lemmingAIs.filter((ai) => {
+      if (ai.mesh === this.base) {
+        return true;
+      } else if (ai.lastResult === "achieved") {
+        console.log(`Lemming ${ai.mesh.name} achieved goal`);
+        this.cleanupAI(ai);
+        return false;
+      } else {
+        return true;
+      }
+    });
   }
 
   setupNewLemming = async (newLemming: Mesh) => {

@@ -26,9 +26,8 @@ import * as _ from 'lodash';
 
 const CAMERA_OFFSET = new Vector3(0, 18, 8);
 const SPEED = 10;
-const ANG_SCALE = 0.3;
-const FORCE_SCALE = 15;
-const FORCE = 300;
+const ANG_SCALE = 10; // 0.3;
+const FORCE_SCALE = 800; // 15;
 
 
 export class FirstPhysics {
@@ -90,7 +89,7 @@ export class FirstPhysics {
         const forces = forward
           .scale(amountForward)
           .add(right.scale(-amountRight))
-          .scale(FORCE_SCALE);
+          .scale(FORCE_SCALE*deltaTime);
 
         // compute a quaternion to look in the direction of movement and then
         // rotation towards it
@@ -101,9 +100,9 @@ export class FirstPhysics {
         );
 
         if (amountRight > 0) {
-          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE, 0));
+          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE*deltaTime, 0));
         } else if (amountRight < 0) {
-          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE, 0));
+          this.pcBody.setAngularVelocity(new Vector3(0, amountRight*ANG_SCALE*deltaTime, 0));
         }
 
         // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
