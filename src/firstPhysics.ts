@@ -26,7 +26,8 @@ export class FirstPhysics {
   private pcBody;
 
   private pc;
-  private camera;
+  private lookCamera;
+  private followCamera;
 
   private groundMeshes;
 
@@ -48,9 +49,8 @@ export class FirstPhysics {
         const deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
         const goal = this.pc.position.add(cameraOffset);
         // this.camera.position = goal;
-        // this.camera.position = Vector3.SmoothToRef(this.camera.position, goal, deltaTime, 0.5);
         const result = new Vector3(0,0,0);
-        this.camera.position = Vector3.SmoothToRef(this.camera.position, goal, deltaTime, 0.2, result);
+        this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
       }
     });
 
@@ -62,12 +62,13 @@ export class FirstPhysics {
         // this.pc.position.addInPlace(moveVec);
         // this.camera.position.addInPlace(moveVec);
         // this.camera.position = this.pc.position.add(cameraOffset);
-        console.log(`Apoplying force`, moveVec);
+        // console.log(`Applying force`, moveVec);
         this.pcBody.applyForce(
           moveVec,
-          // Vector3.Zero(),
-          this.pc.position,
+          this.pc.position, // world position of force applied
         );
+        // const result = new Vector3(0,0,0);
+        // this.lookCamera.position = Vector3.SmoothToRef(this.lookCamera.position, goal, deltaTime, 0.2, result);
         // SetTargetTransform might be useful?
       } else {
         // const moveVec = this.pc.calcRotatePOV(-amountRight * deltaTime, 0, -amountForward * deltaTime);
@@ -124,12 +125,15 @@ export class FirstPhysics {
     this.havokPlugin = new HavokPlugin(true, this.havok);
     scene.enablePhysics(new Vector3(0, -9.8, 0), this.havokPlugin);
 
+    // lemming physics
 
     this.lemmingShape = new PhysicsShapeSphere(
       new Vector3(0, 0, 0),
       3,
       scene,
     );
+
+    // player physics
 
     this.pcShape = new PhysicsShapeCapsule(
       new Vector3(0, 0.5, 0),
@@ -142,14 +146,12 @@ export class FirstPhysics {
       restitution: 0.3,
     };
 
-    // NOTE: can create the body and shape separately then assign the shape to
-    // the body after the body is created.
-
     // Probably should be PhysicsMotionType.ANIMATED but then gravity didn't
     // seem to affect the body
     const pcBody = this.pcBody = new PhysicsBody(this.pc, PhysicsMotionType.DYNAMIC, false, scene)
     pcBody.setMassProperties({
       mass: 1,
+      inertia: Vector3.Zero(), // this blocks rotational impacts
       // centerOfMass, inertia, inertiaOrientation
     });
     pcBody.shape = this.pcShape;
@@ -178,17 +180,17 @@ export class FirstPhysics {
     const scene = new Scene(engine);
     this.scene = scene;
 
-    const camera = this.camera = createCamera(scene, canvas);
     const [pc] = await loadCharacterA(scene, new Vector3(0, 0, 0));
     this.pc = pc;
     pc.addRotation(0, -Math.PI/2, 0);
     pc.position.y = 15;
 
+    this.createCameras(scene, canvas);
     this.setupInput();
 
     const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI")
 
-    createWorld(scene);
+    this.createWorld(scene);
 
     this.groundMeshes = createGround(scene);
 
@@ -196,29 +198,27 @@ export class FirstPhysics {
 
     return scene;
   }
-}
+  createCameras = (scene: Scene, canvas) => {
+    // This creates and positions a free camera (non-mesh)
+    this.lookCamera = new FreeCamera("camera1", new Vector3(0, 18, 8), scene);
 
-function createCamera(scene: Scene, canvas): Camera {
-  // This creates and positions a free camera (non-mesh)
-  var camera = new FreeCamera("camera1", new Vector3(0, 18, 8), scene);
+    // This targets the camera to scene origin
+    this.lookCamera.setTarget(Vector3.Zero());
 
-  // This targets the camera to scene origin
-  camera.setTarget(Vector3.Zero());
+    // This attaches the camera to the canvas
+    this.lookCamera.attachControl(canvas, true);
+  }
 
-  // This attaches the camera to the canvas
-  camera.attachControl(canvas, true);
+  createWorld = (scene: Scene) => {
+    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+    var light = new HemisphericLight("light", new Vector3(1, 2, 0), scene);
 
-  return camera;
-}
+    // Default intensity is 1. Let's dim the light a small amount
+    light.intensity = 0.7;
 
-function createWorld(scene: Scene) {
-  // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-  var light = new HemisphericLight("light", new Vector3(1, 2, 0), scene);
+    return scene;
+  }
 
-  // Default intensity is 1. Let's dim the light a small amount
-  light.intensity = 0.7;
-
-  return scene;
 }
 
 export async function createFirstPhysicsScene(engine: Engine, canvas) {
