@@ -40,7 +40,7 @@ export class LemmingAI {
     this.mesh = mesh;
     this.exitPos = new Vector3(8, 0, -40*4);
     this.speed = MIN_SPEED + _.random(0.0, 1.5);
-    console.log(`Lemming ${mesh.name} speed ${this.speed}`);
+    // console.log(`Lemming ${mesh.name} speed ${this.speed}`);
   }
 
   update = (deltaTime: number): UpdateResult => {
@@ -111,20 +111,14 @@ export class Lemmings {
     const needUpdate = [...this.lemmingAIs];
 
     for (const ai of needUpdate) {
-      const result = ai.update(deltaTime);
-      if (["in_goal"].includes(result)) {
-        // console.log(`Lemming ${ai.mesh.name} ${result}`);
-      }
-      if (["achieved"].includes(result)) {
-        // console.log(`Lemming ${ai.mesh.name} ${result}`);
-      }
+      ai.update(deltaTime);
     }
 
     this.lemmingAIs = this.lemmingAIs.filter((ai) => {
       if (ai.mesh === this.base) {
         return true;
       } else if (ai.lastResult === "achieved") {
-        console.log(`Lemming ${ai.mesh.name} achieved goal`);
+        // console.log(`Lemming ${ai.mesh.name} achieved goal`);
         this.cleanupAI(ai);
         return false;
       } else {
