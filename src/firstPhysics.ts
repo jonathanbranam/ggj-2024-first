@@ -12,12 +12,12 @@ import { Inspector } from '@babylonjs/inspector';
 
 import { GameInput } from './input/GameInput';
 import { Music } from './music/Music';
-import { createGround, loadSpikeFloor } from './world/World';
+import { createWalls, createGround, loadSpikeFloor } from './world/World';
 import { loadCharacterA } from './character/PlayerMesh';
 import { Lemmings } from './lemming/Lemming';
 
 import HavokPhysics from '@babylonjs/havok';
-import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
+import { PhysicsMotionType, PhysicsBody, HavokPlugin, PhysicsShapeBox, PhysicsShapeCapsule, PhysicsShapeSphere, PhysicsAggregate, PhysicsShapeType } from '@babylonjs/core';
 
 import { RayHelper } from '@babylonjs/core';
 
@@ -52,6 +52,7 @@ export class FirstPhysics {
   private followCamera;
 
   private groundMeshes;
+  private wallMeshes;
   public materials: Record<string, Material> = {}
 
   private music: Music;
@@ -310,12 +311,29 @@ export class FirstPhysics {
     //   mass: 1, restitution: 0.75,
     // }, scene);
     //
+    const groundShape = new PhysicsShapeBox(
+      new Vector3(0, 0, 0),
+      new Quaternion(0,0,0,0),
+      new Vector3(4, 1, 4),
+      scene,
+    );
     for (const gm of this.groundMeshes) {
-      const groundPhysics = new PhysicsAggregate(gm, PhysicsShapeType.BOX,{
+      const groundBody = new PhysicsBody(
+        gm, PhysicsMotionType.STATIC, false, scene
+      );
+      groundBody.setMassProperties({
+        mass: 0,
+        inertia: new Vector3(0, 0, 0),
+        // centerOfMass, inertia, inertiaOrientation
+      });
+      groundBody.shape = groundShape;
+    }
+
+    for (const wall of this.wallMeshes) {
+      const wallAggregate = new PhysicsAggregate(wall, PhysicsShapeType.BOX,{
         mass: 0,
       }, scene);
     }
-
     // debugPhysics(scene);
 
   }
@@ -337,7 +355,8 @@ export class FirstPhysics {
 
     await this.setupLemmings();
 
-    this.groundMeshes = createGround(scene);
+    this.groundMeshes = await createGround(scene);
+    this.wallMeshes = await createWalls(scene);
 
     await this.setupPhysics();
 
