@@ -243,6 +243,7 @@ export class FirstPhysics {
     pc.position.y = 5;
     pc.position.z = -5;
 
+    /*
     this.pcFacingRay = new Ray(this.pc.position.clone(), new Vector3(0, 0, -1), 2);
     this.pcBackRay = new Ray(this.pc.position.clone(), new Vector3(0, 0, 1), 2);
     this.pcFacingRayHelper = RayHelper.CreateAndShow(this.pcFacingRay, this.scene, Color3.Green());
@@ -264,6 +265,7 @@ export class FirstPhysics {
       this.pcFacingRay.direction = forward;
       this.pcBackRay.direction = forward.scale(-1);
     });
+    */
   }
 
   setupPhysics = async () => {
